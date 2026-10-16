@@ -43,8 +43,8 @@ either is missing:
 3. **Summarise the answers and wait for the go-ahead.** Then:
    1. Run `go run ./tools/newgame -module … -name … -title "…"`. Add
       `-keep-demo` only if asked.
-   2. Set the resolution, scale modes, palette and audio style in
-      `internal/config/project.go` and `internal/gfx/palette.go`.
+   2. Set the title and the preset in `internal/config/project.go`: `Modern`,
+      `Classic`, or a custom `Preset` added to `internal/config/preset.go`.
    3. Write `DESIGN.md` and `PLAN.md` using the outlines below. Mark anything
       not yet decided as **(open)** in the decisions table.
    4. Change §1 of this file to describe the game, including its fixed
@@ -105,6 +105,9 @@ either is missing:
   discussion are not a go-ahead.
 - **Never commit or push** unless the user says so for that specific commit or
   push.
+- **One commit per milestone.** When a milestone's checks pass, report back
+  and wait. Once the user approves, commit it on its own as
+  `<milestone>: <summary>` (e.g. `K1: …` in the skeleton, `M3: …` in a game).
 - Commits have no `Co-Authored-By: Claude` or `Claude-Session:` trailers. The
   user is the only author.
 - **No CI/CD.** Do not add GitHub workflows unless the user explicitly asks.
@@ -147,9 +150,15 @@ libxxf86vm-dev libasound2-dev pkg-config`. Build them in WSL.
 - **Game logic runs headless:** no GPU calls in `Update`. Game-logic packages
   must not import graphics or audio packages. Scenes and audio react to game
   state and events.
-- **Project settings** (title, resolution, scale modes, audio style) live only
-  in `internal/config/project.go`. The palette lives only in
-  `internal/gfx/palette.go`. Never hard-code them anywhere else.
+- **Project settings** are chosen only in `internal/config/project.go`:
+  - the title and tick rate;
+  - `Project`, the preset, which sets the resolution, scale modes and
+    palette.
+
+  Presets are defined in `internal/config/preset.go`. Code reads them through
+  `config.Project`. Never hard-code a screen size or palette anywhere else.
+- Colours are named with the constants of the chosen palette's package (e.g.
+  `resurrect64.Gold`) and turned into RGBA with `gfx.RGBA`.
 - Tuning values (speeds, timings, scores, levels, skill tables) live in
   `internal/config`. No magic numbers in game code.
 - Colours come from the palette, by name. No hex codes outside the palette
