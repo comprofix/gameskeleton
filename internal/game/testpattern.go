@@ -15,7 +15,7 @@ const (
 )
 
 // drawTestPattern fills dst with a pattern for checking the display with
-// any preset (DESIGN §5): every palette colour as a swatch, a one-pixel
+// any preset: every palette colour as a swatch, a one-pixel
 // frame and checkerboard to show that scaling keeps pixels crisp, a diagonal
 // line, and a marker that moves one pixel per tick to show smooth motion.
 // It only writes pixels, so it runs in tests without a window.

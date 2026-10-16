@@ -1,5 +1,5 @@
-// Command newgame turns a fresh copy of the skeleton into a new game
-// (DESIGN §12.1). It does the steps that must be exact:
+// Command newgame turns a fresh copy of the skeleton into a new game.
+// It does the steps that must be exact:
 //
 //	go run ./tools/newgame -module github.com/comprofix/<game> -name <game> -title "<Game Title>" [-keep-demo]
 //
@@ -36,7 +36,7 @@ const (
 	oldName   = "gameskeleton"
 )
 
-// The demo's files and folders (DESIGN §3), relative to the root.
+// The demo's files and folders, relative to the root.
 var demoPaths = []string{
 	"internal/demo",
 	"internal/game/demo.go",

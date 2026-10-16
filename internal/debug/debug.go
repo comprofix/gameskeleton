@@ -1,4 +1,4 @@
-// Package debug holds what debug builds add (DESIGN §11). Build or run with
+// Package debug holds what debug builds add. Build or run with
 // -tags debug to turn it on:
 //
 //	go run -tags debug ./cmd/gameskeleton

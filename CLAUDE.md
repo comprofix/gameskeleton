@@ -16,8 +16,8 @@ it must stay **game-agnostic**. The only game content is the small demo
 > During new game setup (§2), Claude replaces this section with the game's own
 > description and fixed decisions, and removes §11.
 
-**Current phase:** the skeleton is being built. DESIGN.md and PLAN.md describe
-it, and PLAN.md lists milestones K0–K8.
+**Current phase:** v0.1.0 is released. For further work on the skeleton, §2
+offers to write fresh DESIGN.md and PLAN.md for that work.
 
 ## 2. New game setup
 
@@ -178,8 +178,9 @@ libxxf86vm-dev libasound2-dev pkg-config`. Build them in WSL.
 - Colours come from the palette, by name. No hex codes outside the palette
   files, including in sprite files.
 - Assets are built into the game with `go:embed` from `assets/`.
-- Code comments cite DESIGN sections (e.g. "DESIGN §5") to explain why the code
-  does something.
+- A game's own code cites its DESIGN sections (e.g. "DESIGN §5") to explain
+  why it does something. Shared skeleton code does not, because each game's
+  DESIGN.md is its own; it is explained by its package docs instead.
 - Alt+Enter, F9, F10 and F11 are reserved for the window and never trigger
   game actions.
 - The game plugs into the shared scenes through `game.Content` (its play

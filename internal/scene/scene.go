@@ -1,5 +1,5 @@
 // Package scene runs the game's screens: the scene manager with fades and
-// screen shake, and the shared scenes (DESIGN §7).
+// screen shake, and the shared scenes.
 package scene
 
 import (

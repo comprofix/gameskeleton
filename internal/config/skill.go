@@ -1,6 +1,6 @@
 package config
 
-// Skill is a difficulty level the player picks before a game (DESIGN §3).
+// Skill is a difficulty level the player picks before a game.
 // Games replace these with their own skills and tuning.
 type Skill struct {
 	ID   string // stable key, used in saved files

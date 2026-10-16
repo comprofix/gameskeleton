@@ -1,5 +1,5 @@
 // Package session holds one game in progress: the skill, the score and the
-// lives (DESIGN §7). Games add their own fields.
+// lives. Games add their own fields.
 package session
 
 import "github.com/comprofix/gameskeleton/internal/config"

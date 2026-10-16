@@ -1,5 +1,5 @@
 // Package spritegrid parses text-grid sprite sources and packs them into a
-// sprite sheet (DESIGN §6.1). Format:
+// sprite sheet. Format:
 //
 //	; comment
 //	colours k=Ink g=Moss y=Gold          optional colour key, before any sprite

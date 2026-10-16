@@ -1,4 +1,4 @@
-// Package demo is Dot Dash, the skeleton's demo game (DESIGN §3). Nothing
+// Package demo is Dot Dash, the skeleton's demo game. Nothing
 // outside it imports it except the game package, which hands NewPlay to the
 // scenes; tools/newgame removes it. Its rules are in the world package.
 package demo
@@ -157,7 +157,7 @@ func (p *Play) Draw(ctx *scene.Context, dst *ebiten.Image) {
 	player.Draw(dst, int(p.ticks/bobTicks), x, y, w.FacesLeft)
 
 	// Debug builds outline the cells the rules see, which can differ from
-	// where things are drawn while they slide (DESIGN §11).
+	// where things are drawn while they slide.
 	if debug.Enabled {
 		box := func(c world.Point) {
 			debug.Box(dst, float64(ox+c.X*Cell), float64(oy+c.Y*Cell), Cell, Cell, sc.Highlight)

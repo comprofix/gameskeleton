@@ -12,7 +12,7 @@ import (
 const BlinkTicks = config.TPS
 
 // Title is the title screen: the game's name and a blinking prompt. Any key
-// or button goes to the main menu (DESIGN §3).
+// or button goes to the main menu.
 type Title struct {
 	shown int64 // ticks since the scene started, for the blink
 }

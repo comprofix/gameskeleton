@@ -1,6 +1,6 @@
 // Package resurrect64 is the Resurrect 64 palette by Kerrie Lake
-// (lospec.com/palette-list/resurrect-64), used by the Modern preset
-// (DESIGN §4, §5). The palette has no official colour names; these are our
+// (lospec.com/palette-list/resurrect-64), used by the Modern preset.
+// The palette has no official colour names; these are our
 // own, in the palette's published order.
 package resurrect64
 

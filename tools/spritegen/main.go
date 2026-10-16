@@ -1,11 +1,11 @@
 // Command spritegen converts text-grid sprite sources (*.txt) into PNG
-// sprite sheets plus a JSON frame index, using the project palette
-// (DESIGN §6.1). It runs through go generate in assets:
+// sprite sheets plus a JSON frame index, using the project palette.
+// It runs through go generate in assets:
 //
 //	spritegen -in sprites -out gen
 //
 // With -preview DIR it also writes a scaled-up preview of each sheet, with
-// sprite names on a checkerboard, for checking art by eye (DESIGN §6.2).
+// sprite names on a checkerboard, for checking art by eye.
 package main
 
 import (

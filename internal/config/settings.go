@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-// The saved files, kept beside the game (DESIGN §10).
+// The saved files, kept beside the game.
 const (
 	SettingsFile = "settings.json"
 	ScoresFile   = "scores.json"
 )
 
-// Settings are the player's choices saved between runs (DESIGN §10). They
+// Settings are the player's choices saved between runs. They
 // cover presentation and sound only and never change the rules.
 type Settings struct {
 	ScaleMode     ScaleMode `json:"scale_mode"`

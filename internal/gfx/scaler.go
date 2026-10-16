@@ -1,5 +1,4 @@
-// Package gfx holds the palette access, scaling and drawing helpers
-// (DESIGN §5, §6).
+// Package gfx holds the palette access, scaling and drawing helpers.
 package gfx
 
 import (
@@ -14,7 +13,7 @@ type Rect struct {
 }
 
 // Fit returns where an sw×sh screen is drawn on an outW×outH output surface
-// in the given mode, centred with letterboxing (DESIGN §5).
+// in the given mode, centred with letterboxing.
 func Fit(mode config.ScaleMode, sw, sh, outW, outH int) Rect {
 	ow, oh := float64(outW), float64(outH)
 	fw, fh := float64(sw), float64(sh)

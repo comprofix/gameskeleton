@@ -1,6 +1,6 @@
 // Package game implements ebiten.Game: it runs the scenes, handles the
 // window keys, applies and saves the settings, and presents the internal
-// screen scaled to the window (DESIGN §5, §7).
+// screen scaled to the window.
 package game
 
 import (
@@ -25,8 +25,8 @@ import (
 	"github.com/comprofix/gameskeleton/internal/ui"
 )
 
-// Saved is what was loaded from the saved files, and where they live
-// (DESIGN §10). An empty Dir saves nothing.
+// Saved is what was loaded from the saved files, and where they live.
+// An empty Dir saves nothing.
 type Saved struct {
 	Settings config.Settings
 	Scores   *score.Tables // nil for empty tables
@@ -169,7 +169,7 @@ func (g *Game) applySound() {
 	g.ctx.Audio.SetVolumes(s.AudioLevels()) // a silenced tune keeps time
 }
 
-// saveSettings writes the current settings (DESIGN §10). A failure is
+// saveSettings writes the current settings. A failure is
 // logged, never fatal.
 func (g *Game) saveSettings() {
 	s := &g.settings
@@ -186,7 +186,7 @@ func (g *Game) saveSettings() {
 	}
 }
 
-// saveScores writes the high score tables (DESIGN §10). A failure is logged,
+// saveScores writes the high score tables. A failure is logged,
 // never fatal.
 func (g *Game) saveScores() {
 	if g.dir == "" {
@@ -212,7 +212,7 @@ func (g *Game) Draw(out *ebiten.Image) {
 }
 
 // drawOverlay shows the debug readout in the bottom-left corner: ticks and
-// frames per second, the tick count and the current scene (DESIGN §11).
+// frames per second, the tick count and the current scene.
 func (g *Game) drawOverlay() {
 	sc, f := g.ctx.Scheme, g.ctx.Fonts.Small
 	name := strings.TrimPrefix(fmt.Sprintf("%T", g.scenes.Current()), "*")
@@ -237,7 +237,7 @@ func (g *Game) drawOverlay() {
 }
 
 // present scales the internal screen onto the output surface in the
-// current scale mode (DESIGN §5).
+// current scale mode.
 func (g *Game) present(out *ebiten.Image) {
 	sw, sh := g.preset.ScreenWidth, g.preset.ScreenHeight
 	out.Fill(color.Black)

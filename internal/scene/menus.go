@@ -37,7 +37,7 @@ func drawMenuPanel(ctx *Context, dst *ebiten.Image, m *ui.Menu, y int) {
 	m.DrawCentred(dst, f.Small, y, sc)
 }
 
-// MainMenu offers Play, Options, High scores and Quit (DESIGN §3).
+// MainMenu offers Play, Options, High scores and Quit.
 type MainMenu struct {
 	menu ui.Menu
 }
@@ -101,7 +101,7 @@ func (s *SkillSelect) Draw(ctx *Context, dst *ebiten.Image) {
 	drawMenuScreen(ctx, dst, "SKILL", &s.menu, config.Skills[s.menu.Cursor].Desc)
 }
 
-// Options changes the saved settings (DESIGN §3, §10). Changes apply at
+// Options changes the saved settings. Changes apply at
 // once. Back returns to the scene back makes.
 type Options struct {
 	back func() Scene
@@ -192,7 +192,7 @@ func (s *Options) Draw(ctx *Context, dst *ebiten.Image) {
 }
 
 // Pause is drawn over the paused scene, which stands still underneath. Back
-// or Pause resumes it (DESIGN §3, §7).
+// or Pause resumes it.
 type Pause struct {
 	under Scene
 	menu  ui.Menu

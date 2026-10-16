@@ -2,7 +2,7 @@ package world
 
 import "github.com/comprofix/gameskeleton/internal/config"
 
-// Tuning is one skill's settings for Dot Dash (DESIGN §3). The demo keeps
+// Tuning is one skill's settings for Dot Dash. The demo keeps
 // its tuning here rather than in internal/config so that removing the demo
 // removes it too.
 type Tuning struct {

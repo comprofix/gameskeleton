@@ -1,5 +1,4 @@
-// Package assets embeds the game's generated sprite sheets and fonts
-// (DESIGN §6).
+// Package assets embeds the game's generated sprite sheets and fonts.
 //
 // Sprite sources live in sprites/*.txt; regenerate the sheets with:
 //

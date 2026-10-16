@@ -9,8 +9,7 @@ import (
 	"github.com/comprofix/gameskeleton/internal/config"
 )
 
-// Synth plays tunes and effects on a set of channels in one of the styles
-// (DESIGN §9):
+// Synth plays tunes and effects on a set of channels in one of the styles:
 //   - Chip4: four channels. Tune part i plays on channel i. An effect takes
 //     over its channel while it plays; the music underneath keeps time and
 //     comes back in step.

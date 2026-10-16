@@ -1,4 +1,4 @@
-// Package scenetest runs scenes headless for tests (DESIGN §11): no window,
+// Package scenetest runs scenes headless for tests: no window,
 // no sound, scripted input and a fixed seed, so a run is repeatable. It
 // also compares results with golden files.
 //

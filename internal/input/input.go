@@ -1,4 +1,4 @@
-// Package input maps the keyboard and gamepads to game actions (DESIGN §8).
+// Package input maps the keyboard and gamepads to game actions.
 // Each action reports whether it was just pressed, is held, or was just
 // released. Input comes from a Source, so tests can play back a script.
 package input

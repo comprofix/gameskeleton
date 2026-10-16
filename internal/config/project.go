@@ -1,5 +1,5 @@
 // Package config holds the project settings, the player's saved settings
-// and the game's tuning values (DESIGN §4, §10).
+// and the game's tuning values.
 package config
 
 // Title is the game's name, shown in the window title and on the title
@@ -10,5 +10,5 @@ const Title = "Game Skeleton"
 const TPS = 60
 
 // Project is the preset this game uses: its resolution, scale modes and
-// palette (DESIGN §4). This is the only place they are chosen.
+// palette. This is the only place they are chosen.
 var Project = Modern

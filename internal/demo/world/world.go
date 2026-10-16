@@ -1,4 +1,4 @@
-// Package world is Dot Dash's rules (DESIGN §3): a grid where the player
+// Package world is Dot Dash's rules: a grid where the player
 // steps between cells collecting dots against a clock while hazards slide
 // back and forth. It has no graphics or audio: the play scene draws the
 // state and plays sounds for the events Update returns.

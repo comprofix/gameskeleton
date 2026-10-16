@@ -113,7 +113,7 @@ func Dim(dst *ebiten.Image, c int, opacity float32) {
 }
 
 // Shaker moves the whole screen back and forth for a moment, e.g. when the
-// player is hit (DESIGN §7). It does nothing when reduced motion is on.
+// player is hit. It does nothing when reduced motion is on.
 type Shaker struct {
 	left, px int
 }

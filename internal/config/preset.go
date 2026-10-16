@@ -6,7 +6,7 @@ import (
 	"github.com/comprofix/gameskeleton/internal/gfx/palettes/sweetie16"
 )
 
-// ScaleMode is how the internal screen is shown in the window (DESIGN §5).
+// ScaleMode is how the internal screen is shown in the window.
 // The values are what settings.json stores.
 type ScaleMode string
 
@@ -17,7 +17,7 @@ const (
 	ScaleCRT ScaleMode = "crt"
 )
 
-// Preset is a tested set of display choices a game starts from (DESIGN §4).
+// Preset is a tested set of display choices a game starts from.
 type Preset struct {
 	Name                      string
 	ScreenWidth, ScreenHeight int

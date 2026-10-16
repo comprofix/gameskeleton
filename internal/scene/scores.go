@@ -26,8 +26,8 @@ type TallyLine struct {
 	Points int
 }
 
-// Tally counts up the points of each line in turn, with a running total
-// (DESIGN §7). Confirm finishes the count, then continues to next().
+// Tally counts up the points of each line in turn, with a running total.
+// Confirm finishes the count, then continues to next().
 type Tally struct {
 	heading string
 	lines   []TallyLine
@@ -138,7 +138,7 @@ func AfterGame(ctx *Context, skill config.Skill, points int) Scene {
 
 // HighScoreEntry takes the player's initials for a new high score: Up and
 // Down change the letter, Right or Confirm moves to the next, Left or Back
-// to the one before (DESIGN §7).
+// to the one before.
 type HighScoreEntry struct {
 	skill   config.Skill
 	points  int
@@ -223,7 +223,7 @@ func (e *HighScoreEntry) Draw(ctx *Context, dst *ebiten.Image) {
 }
 
 // HighScoreTable shows one skill's table. Left and Right show the other
-// skills; Confirm or Back returns to the main menu (DESIGN §7).
+// skills; Confirm or Back returns to the main menu.
 type HighScoreTable struct {
 	skill int // index into config.Skills
 	mark  int // the place to highlight, or -1

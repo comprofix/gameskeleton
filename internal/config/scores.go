@@ -1,6 +1,6 @@
 package config
 
-// Scores (DESIGN §10).
+// Scores.
 const (
 	// MaxScore is the largest score: six digits.
 	MaxScore = 999_999

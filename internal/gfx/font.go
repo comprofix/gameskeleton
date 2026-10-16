@@ -12,7 +12,7 @@ import (
 	"github.com/comprofix/gameskeleton/internal/config"
 )
 
-// Font draws text in any palette colour (DESIGN §6.3).
+// Font draws text in any palette colour.
 type Font struct {
 	*bitfont.Font
 	atlas *ebiten.Image

@@ -1,6 +1,6 @@
 package gfx
 
-// Animator steps through a sprite's frames by ticks (DESIGN §6.4).
+// Animator steps through a sprite's frames by ticks.
 type Animator struct {
 	TicksPerFrame int // ticks each frame is shown
 	Frames        int // number of frames to cycle

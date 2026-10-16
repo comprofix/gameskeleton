@@ -1,6 +1,6 @@
 package config
 
-// AudioStyle is how the synth sounds (DESIGN §9).
+// AudioStyle is how the synth sounds.
 type AudioStyle string
 
 const (

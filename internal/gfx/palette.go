@@ -7,9 +7,9 @@ import (
 	"github.com/comprofix/gameskeleton/internal/gfx/palettes"
 )
 
-// Palette is the game's palette, chosen by the project preset (DESIGN §4,
-// §5). Code names colours with the constants of that palette's package,
-// e.g. resurrect64.Gold.
+// Palette is the game's palette, chosen by the project preset. Code names
+// colours with the constants of that palette's package, e.g.
+// resurrect64.Gold.
 func Palette() palettes.Palette { return config.Project.Palette }
 
 // RGBA returns colour i of the game's palette.

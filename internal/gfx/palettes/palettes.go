@@ -1,5 +1,5 @@
 // Package palettes defines the palette type shared by the ready-made
-// palettes in its subpackages (DESIGN §5). Each subpackage names its colours
+// palettes in its subpackages. Each subpackage names its colours
 // as index constants; the palette files are the only place hex codes appear.
 package palettes
 

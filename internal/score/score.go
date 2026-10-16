@@ -1,5 +1,5 @@
 // Package score keeps the high score tables: the best config.TableSize
-// scores for each skill, with initials, saved between runs (DESIGN §10).
+// scores for each skill, with initials, saved between runs.
 package score
 
 import (

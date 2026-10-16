@@ -1,5 +1,5 @@
 // Command gameskeleton starts the game: it loads the saved files, opens the
-// window and runs the scenes (DESIGN §3).
+// window and runs the scenes.
 package main
 
 import (
@@ -23,7 +23,7 @@ func main() {
 		*seed = uint64(time.Now().UnixNano())
 	}
 
-	// The settings and scores live beside the game (DESIGN §10).
+	// The settings and scores live beside the game.
 	p := config.Project
 	dir := config.SaveDir()
 	saved := game.Saved{
@@ -41,7 +41,7 @@ func main() {
 	ebiten.SetWindowClosingHandled(true) // to save the window size on close
 	ebiten.SetTPS(config.TPS)
 
-	// Sound is made in code (DESIGN §9). With no sound device the game
+	// Sound is made in code. With no sound device the game
 	// still runs, silently.
 	synth := audio.NewSynth(p.Audio)
 	player, err := audio.Start(synth)

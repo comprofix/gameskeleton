@@ -1,6 +1,3 @@
-// Package audio makes all the game's sound in code (DESIGN §9): a synth of
-// N channels, each playing pulse, triangle or noise waves with a volume
-// envelope. Tunes and effects are note tables; there are no audio files.
 package audio
 
 import (

@@ -1,4 +1,4 @@
-// Package bitfont parses and draws bitmap fonts without a GPU (DESIGN §6.3),
+// Package bitfont parses and draws bitmap fonts without a GPU,
 // so both the game and the build tools can use them.
 //
 // The text format is one glyph after another: "@" plus the character on its

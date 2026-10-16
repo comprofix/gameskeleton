@@ -3,7 +3,7 @@ package gfx
 import "github.com/comprofix/gameskeleton/internal/gfx/palettes"
 
 // Scheme gives the shared scenes and menus their colours by role, so they
-// look right with any palette (DESIGN §5). Each role is a palette index.
+// look right with any palette. Each role is a palette index.
 type Scheme struct {
 	Backdrop  int // screen background
 	Panel     int // menu and dialog panels

@@ -12,7 +12,7 @@ import (
 	"github.com/comprofix/gameskeleton/internal/spritegrid"
 )
 
-// Sprite is a named sprite's frames within a sheet (DESIGN §6.1).
+// Sprite is a named sprite's frames within a sheet.
 type Sprite struct {
 	frames []*ebiten.Image
 	W, H   int

@@ -1,5 +1,5 @@
 // Package ui has the shared menu widget and drawing helpers for panels and
-// text (DESIGN §7).
+// text.
 package ui
 
 import (
