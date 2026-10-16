@@ -185,6 +185,7 @@ internal/
   audio/           synth, tunes, sound effects, scheduling, output
   input/           actions, keyboard, gamepad, scripted input
   spritegrid/      text-grid sprite parser and packer
+  bitfont/         bitmap fonts without a GPU (game and tools)
   debug/           debug.Enabled (build tag: debug)
   <game logic>/    the game's own world, with no graphics or audio imports
 tools/spritegen/   sprites → PNG + JSON (+ preview)

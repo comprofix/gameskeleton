@@ -4,6 +4,7 @@
 package game
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/comprofix/gameskeleton/assets"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/gfx"
 )
@@ -36,21 +38,34 @@ type Game struct {
 	rng  *rand.Rand
 	tick int64
 
+	showcase    *showcase
+	showPattern bool // Tab switches between the showcase and the test pattern
+
 	dir      string
 	settings config.Settings
 }
 
-// New starts the game with the given random seed and saved files.
-func New(seed uint64, saved Saved) *Game {
+// New loads the assets and starts the game with the given random seed and
+// saved files.
+func New(seed uint64, saved Saved) (*Game, error) {
 	p := config.Project
+	fonts, err := gfx.LoadFonts(assets.FS, "font/font8x8.txt")
+	if err != nil {
+		return nil, fmt.Errorf("fonts: %w", err)
+	}
+	demo, err := gfx.LoadSheet(assets.FS, "gen/demo")
+	if err != nil {
+		return nil, fmt.Errorf("demo sheet: %w", err)
+	}
 	return &Game{
 		preset:   p,
 		screen:   ebiten.NewImage(p.ScreenWidth, p.ScreenHeight),
 		pixels:   image.NewRGBA(image.Rect(0, 0, p.ScreenWidth, p.ScreenHeight)),
 		rng:      rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15)),
+		showcase: newShowcase(demo, fonts, p.Palette),
 		dir:      saved.Dir,
 		settings: saved.Settings,
-	}
+	}, nil
 }
 
 // Update handles the window keys and advances the game by one tick.
@@ -68,6 +83,10 @@ func (g *Game) Update() error {
 		g.settings.ScaleMode = g.preset.NextMode(g.settings.ScaleMode)
 		g.saveSettings()
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
+		g.showPattern = !g.showPattern
+	}
+	g.showcase.update()
 	g.tick++
 	return nil
 }
@@ -92,8 +111,12 @@ func (g *Game) saveSettings() {
 
 // Draw renders the internal screen and presents it.
 func (g *Game) Draw(out *ebiten.Image) {
-	drawTestPattern(g.pixels, g.preset, g.tick)
-	g.screen.WritePixels(g.pixels.Pix)
+	if g.showPattern {
+		drawTestPattern(g.pixels, g.preset, g.tick)
+		g.screen.WritePixels(g.pixels.Pix)
+	} else {
+		g.showcase.draw(g.screen, g.tick)
+	}
 	g.present(out)
 }
 

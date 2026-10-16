@@ -37,7 +37,11 @@ func main() {
 	ebiten.SetWindowClosingHandled(true) // to save the window size on close
 	ebiten.SetTPS(config.TPS)
 
-	if err := ebiten.RunGame(game.New(*seed, saved)); err != nil {
+	g, err := game.New(*seed, saved)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
 }
