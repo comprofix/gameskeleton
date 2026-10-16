@@ -21,7 +21,8 @@ type Settings struct {
 	WindowW       int       `json:"window_width"`
 	WindowH       int       `json:"window_height"`
 	SoundOn       bool      `json:"sound_on"`
-	Muted         bool      `json:"muted"`
+	MusicOn       bool      `json:"music_on"`
+	SFXOn         bool      `json:"sfx_on"`
 	MasterVolume  float64   `json:"master_volume"` // 0–1
 	MusicVolume   float64   `json:"music_volume"`  // 0–1
 	SFXVolume     float64   `json:"sfx_volume"`    // 0–1
@@ -34,7 +35,7 @@ func DefaultSettings(p Preset) Settings {
 	return Settings{
 		ScaleMode: p.ScaleModes[0],
 		WindowW:   w, WindowH: h,
-		SoundOn:      true,
+		SoundOn: true, MusicOn: true, SFXOn: true,
 		MasterVolume: 0.8, MusicVolume: 0.8, SFXVolume: 0.8,
 	}
 }
@@ -67,6 +68,22 @@ func (s Settings) Clamped(p Preset) Settings {
 	s.MusicVolume = unit(s.MusicVolume)
 	s.SFXVolume = unit(s.SFXVolume)
 	return s
+}
+
+// AudioLevels are the master, music and effects volumes to play at: a
+// switched-off part is silent. Sound off (Ctrl+S) silences everything.
+func (s Settings) AudioLevels() (master, music, sfx float64) {
+	if !s.SoundOn {
+		return 0, 0, 0
+	}
+	music, sfx = s.MusicVolume, s.SFXVolume
+	if !s.MusicOn {
+		music = 0
+	}
+	if !s.SFXOn {
+		sfx = 0
+	}
+	return s.MasterVolume, music, sfx
 }
 
 // unit clamps v to 0–1, treating NaN as 0.

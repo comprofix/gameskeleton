@@ -15,6 +15,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	"github.com/comprofix/gameskeleton/assets"
+	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/demo"
 	"github.com/comprofix/gameskeleton/internal/gfx"
@@ -49,8 +50,8 @@ type Game struct {
 }
 
 // New loads the assets and starts at the title screen with the given
-// random seed and saved files.
-func New(seed uint64, saved Saved) (*Game, error) {
+// random seed and saved files, playing sound through synth (nil for none).
+func New(seed uint64, saved Saved, synth *audio.Synth) (*Game, error) {
 	p := config.Project
 	fonts, err := gfx.LoadFonts(assets.FS, "font/font8x8.txt")
 	if err != nil {
@@ -74,8 +75,11 @@ func New(seed uint64, saved Saved) (*Game, error) {
 		Scheme:  gfx.SchemeFor(p.Palette),
 		Sheets:  map[string]*gfx.Sheet{"demo": demoSheet},
 		NewPlay: demo.NewPlay,
+		Audio:   synth,
+		Sounds:  audio.Join(scene.Sounds, demo.Sounds),
 	}
 	g.ctx.Settings = &g.settings
+	g.applySound()
 	g.scenes = scene.NewManager(scene.NewTitle())
 	return g, nil
 }
@@ -84,6 +88,7 @@ func New(seed uint64, saved Saved) (*Game, error) {
 func (g *Game) Update() error {
 	in := g.ctx.Input
 	in.Update()
+	g.ctx.Audio.Now(g.ctx.Tick)
 	s := &g.settings
 
 	if in.JustPressed(input.Quit) || ebiten.IsWindowBeingClosed() {
@@ -121,11 +126,19 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// applySettings makes the window match the settings.
+// applySettings makes the window and sound match the settings.
 func (g *Game) applySettings() {
+	g.applySound()
 	if ebiten.IsFullscreen() != g.settings.Fullscreen {
 		ebiten.SetFullscreen(g.settings.Fullscreen)
 	}
+}
+
+// applySound sets the synth from the sound settings.
+func (g *Game) applySound() {
+	s := &g.settings
+	g.ctx.Audio.SetEnabled(s.SoundOn)
+	g.ctx.Audio.SetVolumes(s.AudioLevels()) // a silenced tune keeps time
 }
 
 // saveSettings writes the current settings (DESIGN §10). A failure is

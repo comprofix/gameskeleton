@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/game"
 )
@@ -37,7 +38,21 @@ func main() {
 	ebiten.SetWindowClosingHandled(true) // to save the window size on close
 	ebiten.SetTPS(config.TPS)
 
-	g, err := game.New(*seed, saved)
+	// Sound is made in code (DESIGN §9). With no sound device the game
+	// still runs, silently.
+	synth := audio.NewSynth(p.Audio)
+	player, err := audio.Start(synth)
+	if err != nil {
+		log.Printf("sound: %v", err)
+		synth = nil
+	}
+	defer func() {
+		if player != nil {
+			player.Close()
+		}
+	}()
+
+	g, err := game.New(*seed, saved, synth)
 	if err != nil {
 		log.Fatal(err)
 	}

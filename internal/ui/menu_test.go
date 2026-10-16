@@ -91,3 +91,11 @@ func TestBlink(t *testing.T) {
 		t.Error("Blink should be on for the first half of each period")
 	}
 }
+
+func TestSkippingADisabledItemIsSilent(t *testing.T) {
+	m := &Menu{Items: []Item{{Label: "A", Disabled: true}, {Label: "B"}}}
+	m.OnMove = func() { t.Error("OnMove called when skipping a disabled first item") }
+	in := feed(input.Idle(1))
+	in.Update()
+	m.Update(in)
+}

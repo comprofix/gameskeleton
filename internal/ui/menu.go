@@ -59,6 +59,14 @@ func (m *Menu) Update(in *input.Input) {
 }
 
 func (m *Menu) move(dir int) {
+	if m.step(dir) && m.OnMove != nil {
+		m.OnMove()
+	}
+}
+
+// step moves the cursor to the next enabled item in direction dir and
+// reports whether it moved.
+func (m *Menu) step(dir int) bool {
 	start := m.Cursor
 	for range m.Items {
 		m.Cursor = (m.Cursor + dir + len(m.Items)) % len(m.Items)
@@ -66,9 +74,7 @@ func (m *Menu) move(dir int) {
 			break
 		}
 	}
-	if m.Cursor != start && m.OnMove != nil {
-		m.OnMove()
-	}
+	return m.Cursor != start
 }
 
 func (m *Menu) adjust(dir int) {
@@ -82,11 +88,12 @@ func (m *Menu) adjust(dir int) {
 	}
 }
 
-// skipDisabled moves the cursor off a disabled item, if it is on one.
+// skipDisabled moves the cursor off a disabled item, if it is on one,
+// silently.
 func (m *Menu) skipDisabled(dir int) {
 	m.Cursor = min(max(m.Cursor, 0), len(m.Items)-1)
 	if m.Items[m.Cursor].Disabled {
-		m.move(dir)
+		m.step(dir)
 	}
 }
 

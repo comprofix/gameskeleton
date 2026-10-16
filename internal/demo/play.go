@@ -30,7 +30,8 @@ type Play struct {
 }
 
 // NewPlay starts the demo at a skill.
-func NewPlay(_ *scene.Context, skill config.Skill) scene.Scene {
+func NewPlay(ctx *scene.Context, skill config.Skill) scene.Scene {
+	ctx.Audio.StopTune()
 	return &Play{
 		skill: skill,
 		bob:   gfx.Animator{TicksPerFrame: 20, Frames: 2},
@@ -54,6 +55,9 @@ func (p *Play) Update(ctx *scene.Context) error {
 		return nil
 	case in.JustPressed(input.Confirm):
 		ctx.Shake.Start(shakeTicks, shakePx)
+		ctx.Audio.PlayEffect(Bump)
+	case in.JustPressed(input.Up), in.JustPressed(input.Down), in.JustPressed(input.Left), in.JustPressed(input.Right):
+		ctx.Audio.PlayEffect(Step)
 	}
 	p.ticks++
 	p.bob.Advance(1)
@@ -70,7 +74,7 @@ func (p *Play) Draw(ctx *scene.Context, dst *ebiten.Image) {
 
 	ui.TextCentred(dst, f.Large, "DOT DASH", 12, sc.Title, sc.Shadow)
 	ui.TextCentred(dst, f.Small, "Skill: "+p.skill.Name, 36, sc.Text, sc.Shadow)
-	ui.TextCentred(dst, f.Small, "Esc pause  Space shake  Ctrl+M menu", h-2*f.Small.Size, sc.Dim, sc.Shadow)
+	ui.TextCentred(dst, f.Small, "Arrows step  Space bump  Esc pause", h-2*f.Small.Size, sc.Dim, sc.Shadow)
 
 	// A row of sprites: the player bobbing, mirrored, hurt, the hazard,
 	// coins, hearts.

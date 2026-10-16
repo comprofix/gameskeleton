@@ -23,22 +23,27 @@ type Preset struct {
 	ScreenWidth, ScreenHeight int
 	ScaleModes                []ScaleMode // the modes F9 cycles through; the first is the default
 	Palette                   palettes.Palette
+	Audio                     AudioStyle
 }
 
-// Modern is 640×360 with Resurrect 64, scaled by whole numbers.
+// Modern is 640×360 with Resurrect 64, scaled by whole numbers, with
+// four-channel chip sound.
 var Modern = Preset{
 	Name:        "Modern",
 	ScreenWidth: 640, ScreenHeight: 360,
 	ScaleModes: []ScaleMode{ScaleInteger},
 	Palette:    resurrect64.Palette,
+	Audio:      Chip4,
 }
 
-// Classic is 320×200 with Sweetie 16, scaled by whole numbers or to CRT 4:3.
+// Classic is 320×200 with Sweetie 16, scaled by whole numbers or to CRT 4:3,
+// with a single PC-speaker voice.
 var Classic = Preset{
 	Name:        "Classic PC",
 	ScreenWidth: 320, ScreenHeight: 200,
 	ScaleModes: []ScaleMode{ScaleInteger, ScaleCRT},
 	Palette:    sweetie16.Palette,
+	Audio:      Speaker,
 }
 
 // HasMode reports whether the preset offers mode m.

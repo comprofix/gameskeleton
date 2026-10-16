@@ -46,6 +46,7 @@ func NewMainMenu() *MainMenu { return &MainMenu{} }
 
 // Update implements Scene.
 func (s *MainMenu) Update(ctx *Context) error {
+	playTitleTune(ctx)
 	if s.menu.Items == nil {
 		s.menu.Items = []ui.Item{
 			{Label: "Play", Disabled: ctx.NewPlay == nil, Confirm: func() { ctx.Switch(NewSkillSelect()) }},
@@ -53,6 +54,7 @@ func (s *MainMenu) Update(ctx *Context) error {
 			{Label: "High scores", Disabled: true}, // the tables come with the saved scores
 			{Label: "Quit", Confirm: ctx.Quit},
 		}
+		menuSounds(ctx, &s.menu)
 	}
 	if ctx.Input.JustPressed(input.Back) {
 		ctx.Switch(NewTitle())
@@ -83,6 +85,7 @@ func (s *SkillSelect) Update(ctx *Context) error {
 				ctx.Switch(ctx.NewPlay(ctx, sk))
 			}})
 		}
+		menuSounds(ctx, &s.menu)
 	}
 	if ctx.Input.JustPressed(input.Back) {
 		ctx.Switch(NewMainMenu())
@@ -114,6 +117,7 @@ const VolumeSteps = 10
 func (s *Options) Update(ctx *Context) error {
 	if s.menu.Items == nil {
 		s.menu.Items = s.items(ctx)
+		menuSounds(ctx, &s.menu)
 	}
 	if ctx.Input.JustPressed(input.Back) {
 		ctx.Switch(s.back())
@@ -136,8 +140,30 @@ func (s *Options) items(ctx *Context) []ui.Item {
 		}
 		return show, adjust
 	}
-	musicShow, musicAdjust := volume(&set.MusicVolume)
-	sfxShow, sfxAdjust := volume(&set.SFXVolume)
+	masterShow, masterAdjust := volume(&set.MasterVolume)
+	// switchable is a volume that Confirm turns off and on; Left or Right
+	// turns it back on before changing it.
+	switchable := func(label string, on *bool, v *float64) ui.Item {
+		show, adjust := volume(v)
+		return ui.Item{
+			Label: label,
+			Value: func() string {
+				if !*on {
+					return "Off"
+				}
+				return show()
+			},
+			Confirm: func() { *on = !*on; ctx.SettingsChanged() },
+			Adjust: func(d int) {
+				if !*on {
+					*on = true
+					ctx.SettingsChanged()
+					return
+				}
+				adjust(d)
+			},
+		}
+	}
 	modes := config.Project.ScaleModes
 	return []ui.Item{
 		{Label: "Scale", Value: func() string { return ScaleModeName(set.ScaleMode) }, Disabled: len(modes) < 2,
@@ -153,8 +179,12 @@ func (s *Options) items(ctx *Context) []ui.Item {
 			}},
 		{Label: "Fullscreen", Value: ui.OnOff(&set.Fullscreen), Adjust: toggle(&set.Fullscreen)},
 		{Label: "Sound", Value: ui.OnOff(&set.SoundOn), Adjust: toggle(&set.SoundOn)},
-		{Label: "Music volume", Value: musicShow, Adjust: musicAdjust},
-		{Label: "Effects volume", Value: sfxShow, Adjust: sfxAdjust},
+		{Label: "Volume", Value: masterShow, Adjust: masterAdjust},
+		switchable("Music", &set.MusicOn, &set.MusicVolume),
+		switchable("Effects", &set.SFXOn, &set.SFXVolume),
+		{Label: "Sound test", Confirm: func() {
+			ctx.Switch(NewSoundTest(func() Scene { return NewOptions(s.back) }))
+		}},
 		{Label: "Reduced motion", Value: ui.OnOff(&set.ReducedMotion), Adjust: toggle(&set.ReducedMotion)},
 		{Label: "Back", Confirm: func() { ctx.Switch(s.back()) }},
 	}
@@ -196,6 +226,7 @@ func (p *Pause) Update(ctx *Context) error {
 			{Label: "Options", Confirm: func() { ctx.Switch(NewOptions(func() Scene { return p })) }},
 			{Label: "Quit to menu", Confirm: func() { ctx.Switch(NewMainMenu()) }},
 		}
+		menuSounds(ctx, &p.menu)
 	}
 	if ctx.Input.JustPressed(input.Back) || ctx.Input.JustPressed(input.Pause) {
 		ctx.Cut(p.under)

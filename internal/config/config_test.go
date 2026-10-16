@@ -134,3 +134,29 @@ func TestInGoBuild(t *testing.T) {
 		t.Error("ordinary folder taken for go-build")
 	}
 }
+
+func TestAudioLevels(t *testing.T) {
+	s := DefaultSettings(Modern)
+	s.MasterVolume, s.MusicVolume, s.SFXVolume = 0.9, 0.6, 0.3
+	type levels struct{ master, music, sfx float64 }
+	get := func(s Settings) levels {
+		m, mu, fx := s.AudioLevels()
+		return levels{m, mu, fx}
+	}
+	for _, c := range []struct {
+		name               string
+		sound, music, sfxs bool
+		want               levels
+	}{
+		{"all on", true, true, true, levels{0.9, 0.6, 0.3}},
+		{"music off", true, false, true, levels{0.9, 0, 0.3}},
+		{"effects off", true, true, false, levels{0.9, 0.6, 0}},
+		{"both off", true, false, false, levels{0.9, 0, 0}},
+		{"sound off", false, true, true, levels{0, 0, 0}},
+	} {
+		s.SoundOn, s.MusicOn, s.SFXOn = c.sound, c.music, c.sfxs
+		if got := get(s); got != c.want {
+			t.Errorf("%s: %v, want %v", c.name, got, c.want)
+		}
+	}
+}

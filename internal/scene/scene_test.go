@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/input"
 )
@@ -86,7 +87,7 @@ func TestTitleToOptionsAndBack(t *testing.T) {
 
 	// Down to Reduced motion (Scale is disabled in the Modern preset, so the
 	// cursor starts on Fullscreen) and toggle it.
-	for range 4 {
+	for range 6 {
 		h.press(ebiten.KeyArrowDown)
 	}
 	if got := opts.menu.Items[opts.menu.Cursor].Label; got != "Reduced motion" {
@@ -108,7 +109,7 @@ func TestVolumeSteps(t *testing.T) {
 	h.ticks(1) // builds the items
 	opts := current[*Options](t, h)
 	h.ctx.Settings.MusicVolume = 0.8
-	for opts.menu.Items[opts.menu.Cursor].Label != "Music volume" {
+	for opts.menu.Items[opts.menu.Cursor].Label != "Music" {
 		h.press(ebiten.KeyArrowDown)
 	}
 	h.press(ebiten.KeyArrowRight)
@@ -117,8 +118,30 @@ func TestVolumeSteps(t *testing.T) {
 	if h.ctx.Settings.MusicVolume != 1 {
 		t.Errorf("music volume %v, want 1", h.ctx.Settings.MusicVolume)
 	}
-	if got := opts.menu.Text(opts.menu.Cursor); got != "Music volume: 10/10" {
+	if got := opts.menu.Text(opts.menu.Cursor); got != "Music: 10/10" {
 		t.Errorf("shows %q", got)
+	}
+}
+
+func TestMusicSwitch(t *testing.T) {
+	h := newHarness(t, NewOptions(func() Scene { return NewMainMenu() }))
+	h.ticks(1)
+	opts := current[*Options](t, h)
+	set := h.ctx.Settings
+	set.MusicVolume = 0.5
+	for opts.menu.Items[opts.menu.Cursor].Label != "Music" {
+		h.press(ebiten.KeyArrowDown)
+	}
+	h.press(ebiten.KeyEnter)
+	if set.MusicOn || opts.menu.Text(opts.menu.Cursor) != "Music: Off" {
+		t.Fatalf("Enter did not turn the music off: %q", opts.menu.Text(opts.menu.Cursor))
+	}
+	if !set.SFXOn {
+		t.Error("turning the music off turned the effects off")
+	}
+	h.press(ebiten.KeyArrowLeft) // turns it back on without changing the level
+	if !set.MusicOn || set.MusicVolume != 0.5 {
+		t.Errorf("after Left: on %v, volume %v; want on at 0.5", set.MusicOn, set.MusicVolume)
 	}
 }
 
@@ -206,5 +229,51 @@ func TestShake(t *testing.T) {
 	s.update(true)
 	if dx, dy := s.Offset(); dx != 0 || dy != 0 {
 		t.Error("reduced motion must stop the shake")
+	}
+}
+
+func TestSounds(t *testing.T) {
+	if err := audio.Join(Sounds).Check(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestTitleTuneAndMenuSounds(t *testing.T) {
+	h := newHarness(t, NewTitle())
+	h.ctx.Audio = audio.NewSynth(config.Chip4)
+	h.ticks(1)
+	if h.ctx.Audio.Tune() != TitleTune {
+		t.Fatal("the title does not play the title tune")
+	}
+	h.press(ebiten.KeyQ)
+	m := current[*MainMenu](t, h)
+	if m.menu.OnMove == nil || m.menu.OnConfirm == nil {
+		t.Error("the main menu has no sounds")
+	}
+	h.ctx.Audio.StopTune() // as a game does
+	h.press(ebiten.KeyEscape)
+	h.press(ebiten.KeyQ)
+	if h.ctx.Audio.Tune() != TitleTune {
+		t.Error("returning to the menus does not restart the title tune")
+	}
+}
+
+func TestSoundTest(t *testing.T) {
+	h := newHarness(t, NewSoundTest(func() Scene { return NewMainMenu() }))
+	h.ctx.Audio = audio.NewSynth(config.Chip4)
+	h.ctx.Sounds = Sounds
+	h.ticks(1)
+	st := current[*SoundTest](t, h)
+	if n := len(st.menu.Items); n != len(Sounds.Tunes)+len(Sounds.Effects)+2 {
+		t.Fatalf("%d items", n)
+	}
+	h.press(ebiten.KeyEnter) // the first tune
+	if h.ctx.Audio.Tune() != Sounds.Tunes[0] {
+		t.Error("the sound test did not play the first tune")
+	}
+	h.in.Steps = append(h.in.Steps, input.Press(ebiten.KeyEscape), input.Idle(1))
+	h.ticks(2)
+	if h.ctx.Audio.Tune() != nil {
+		t.Error("leaving the sound test did not stop the sound")
 	}
 }

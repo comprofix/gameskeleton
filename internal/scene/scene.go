@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/gfx"
 	"github.com/comprofix/gameskeleton/internal/input"
@@ -29,7 +30,9 @@ type Context struct {
 	Sheets   map[string]*gfx.Sheet
 	Settings *config.Settings
 	Shake    Shaker
-	Tick     int64 // ticks since the game started
+	Tick     int64        // ticks since the game started
+	Audio    *audio.Synth // nil in tests: every call is then ignored
+	Sounds   audio.Bank   // every tune and effect, for the sound test
 
 	// NewPlay starts a game at the given skill. The game package sets it,
 	// so the shared scenes don't depend on the game's own packages.

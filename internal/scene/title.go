@@ -23,7 +23,9 @@ func NewTitle() *Title { return &Title{} }
 // Update implements Scene.
 func (t *Title) Update(ctx *Context) error {
 	t.shown++
+	playTitleTune(ctx)
 	if ctx.Input.AnyJustPressed() {
+		ctx.Audio.PlayEffect(MenuConfirm)
 		ctx.Switch(NewMainMenu())
 	}
 	return nil
