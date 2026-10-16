@@ -1,6 +1,6 @@
-// Package game implements ebiten.Game: it handles the window keys, runs the
-// game at the project preset's internal resolution, and presents it scaled
-// to the window (DESIGN §5).
+// Package game implements ebiten.Game: it runs the scenes, handles the
+// window keys, applies and saves the settings, and presents the internal
+// screen scaled to the window (DESIGN §5, §7).
 package game
 
 import (
@@ -16,7 +16,10 @@ import (
 
 	"github.com/comprofix/gameskeleton/assets"
 	"github.com/comprofix/gameskeleton/internal/config"
+	"github.com/comprofix/gameskeleton/internal/demo"
 	"github.com/comprofix/gameskeleton/internal/gfx"
+	"github.com/comprofix/gameskeleton/internal/input"
+	"github.com/comprofix/gameskeleton/internal/scene"
 )
 
 // Saved is what was loaded from the saved files, and where they live
@@ -30,73 +33,106 @@ type Saved struct {
 type Game struct {
 	preset   config.Preset
 	screen   *ebiten.Image // the internal screen
-	pixels   *image.RGBA   // CPU-side copy of the screen for the test pattern
 	prescale *ebiten.Image // whole-number upscale used for CRT presentation
 	outW     int
 	outH     int
 
-	rng  *rand.Rand
-	tick int64
+	ctx    *scene.Context
+	scenes *scene.Manager
 
-	showcase    *showcase
-	showPattern bool // Tab switches between the showcase and the test pattern
+	// Tab shows the display test pattern instead of the scenes.
+	showPattern bool
+	pixels      *image.RGBA // CPU-side screen for the test pattern
 
 	dir      string
 	settings config.Settings
 }
 
-// New loads the assets and starts the game with the given random seed and
-// saved files.
+// New loads the assets and starts at the title screen with the given
+// random seed and saved files.
 func New(seed uint64, saved Saved) (*Game, error) {
 	p := config.Project
 	fonts, err := gfx.LoadFonts(assets.FS, "font/font8x8.txt")
 	if err != nil {
 		return nil, fmt.Errorf("fonts: %w", err)
 	}
-	demo, err := gfx.LoadSheet(assets.FS, "gen/demo")
+	demoSheet, err := gfx.LoadSheet(assets.FS, "gen/demo")
 	if err != nil {
 		return nil, fmt.Errorf("demo sheet: %w", err)
 	}
-	return &Game{
+	g := &Game{
 		preset:   p,
 		screen:   ebiten.NewImage(p.ScreenWidth, p.ScreenHeight),
 		pixels:   image.NewRGBA(image.Rect(0, 0, p.ScreenWidth, p.ScreenHeight)),
-		rng:      rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15)),
-		showcase: newShowcase(demo, fonts, p.Palette),
 		dir:      saved.Dir,
 		settings: saved.Settings,
-	}, nil
+	}
+	g.ctx = &scene.Context{
+		Input:   input.New(&input.Ebiten{}),
+		RNG:     rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15)),
+		Fonts:   fonts,
+		Scheme:  gfx.SchemeFor(p.Palette),
+		Sheets:  map[string]*gfx.Sheet{"demo": demoSheet},
+		NewPlay: demo.NewPlay,
+	}
+	g.ctx.Settings = &g.settings
+	g.scenes = scene.NewManager(scene.NewTitle())
+	return g, nil
 }
 
-// Update handles the window keys and advances the game by one tick.
+// Update handles the window keys and runs the scenes for one tick.
 func (g *Game) Update() error {
-	if inpututil.IsKeyJustPressed(ebiten.KeyF10) || ebiten.IsWindowBeingClosed() {
+	in := g.ctx.Input
+	in.Update()
+	s := &g.settings
+
+	if in.JustPressed(input.Quit) || ebiten.IsWindowBeingClosed() {
 		g.saveSettings() // keeps the window size
 		return ebiten.Termination
 	}
-	altEnter := ebiten.IsKeyPressed(ebiten.KeyAlt) && inpututil.IsKeyJustPressed(ebiten.KeyEnter)
-	if inpututil.IsKeyJustPressed(ebiten.KeyF11) || altEnter {
-		ebiten.SetFullscreen(!ebiten.IsFullscreen())
-		g.saveSettings()
+	if in.JustPressed(input.Fullscreen) {
+		s.Fullscreen = !s.Fullscreen
+		g.ctx.SettingsChanged()
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyF9) {
-		g.settings.ScaleMode = g.preset.NextMode(g.settings.ScaleMode)
-		g.saveSettings()
+	if in.JustPressed(input.ScaleMode) {
+		s.ScaleMode = g.preset.NextMode(s.ScaleMode)
+		g.ctx.SettingsChanged()
+	}
+	if in.JustPressed(input.Sound) {
+		s.SoundOn = !s.SoundOn
+		g.ctx.SettingsChanged()
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
 		g.showPattern = !g.showPattern
 	}
-	g.showcase.update()
-	g.tick++
+
+	if err := g.scenes.Update(g.ctx); err != nil {
+		return err
+	}
+	g.ctx.Tick++
+	if g.ctx.Quitting() {
+		g.saveSettings()
+		return ebiten.Termination
+	}
+	if g.ctx.TakeSettingsChanged() {
+		g.applySettings()
+		g.saveSettings()
+	}
 	return nil
+}
+
+// applySettings makes the window match the settings.
+func (g *Game) applySettings() {
+	if ebiten.IsFullscreen() != g.settings.Fullscreen {
+		ebiten.SetFullscreen(g.settings.Fullscreen)
+	}
 }
 
 // saveSettings writes the current settings (DESIGN §10). A failure is
 // logged, never fatal.
 func (g *Game) saveSettings() {
 	s := &g.settings
-	s.Fullscreen = ebiten.IsFullscreen()
-	if !s.Fullscreen {
+	if !ebiten.IsFullscreen() {
 		if w, h := ebiten.WindowSize(); w > 0 && h > 0 {
 			s.WindowW, s.WindowH = w, h
 		}
@@ -112,10 +148,10 @@ func (g *Game) saveSettings() {
 // Draw renders the internal screen and presents it.
 func (g *Game) Draw(out *ebiten.Image) {
 	if g.showPattern {
-		drawTestPattern(g.pixels, g.preset, g.tick)
+		drawTestPattern(g.pixels, g.preset, g.ctx.Tick)
 		g.screen.WritePixels(g.pixels.Pix)
 	} else {
-		g.showcase.draw(g.screen, g.tick)
+		g.scenes.Draw(g.ctx, g.screen)
 	}
 	g.present(out)
 }
