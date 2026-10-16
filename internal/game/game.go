@@ -8,8 +8,8 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"math/rand/v2"
 	"path/filepath"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -17,11 +17,13 @@ import (
 	"github.com/comprofix/gameskeleton/assets"
 	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
+	"github.com/comprofix/gameskeleton/internal/debug"
 	"github.com/comprofix/gameskeleton/internal/demo"
 	"github.com/comprofix/gameskeleton/internal/gfx"
 	"github.com/comprofix/gameskeleton/internal/input"
 	"github.com/comprofix/gameskeleton/internal/scene"
 	"github.com/comprofix/gameskeleton/internal/score"
+	"github.com/comprofix/gameskeleton/internal/ui"
 )
 
 // Saved is what was loaded from the saved files, and where they live
@@ -43,7 +45,8 @@ type Game struct {
 	ctx    *scene.Context
 	scenes *scene.Manager
 
-	// Tab shows the display test pattern instead of the scenes.
+	// In debug builds, Tab shows the display test pattern instead of the
+	// scenes.
 	showPattern bool
 	pixels      *image.RGBA // CPU-side screen for the test pattern
 
@@ -72,7 +75,7 @@ func New(seed uint64, saved Saved, synth *audio.Synth) (*Game, error) {
 	}
 	g.ctx = &scene.Context{
 		Input:   input.New(&input.Ebiten{}),
-		RNG:     rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15)),
+		RNG:     scene.NewRNG(seed),
 		Fonts:   fonts,
 		Scheme:  gfx.SchemeFor(p.Palette),
 		Sheets:  map[string]*gfx.Sheet{"demo": demoSheet},
@@ -113,7 +116,7 @@ func (g *Game) Update() error {
 		s.SoundOn = !s.SoundOn
 		g.ctx.SettingsChanged()
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
+	if debug.Enabled && inpututil.IsKeyJustPressed(ebiten.KeyTab) {
 		g.showPattern = !g.showPattern
 	}
 
@@ -186,7 +189,35 @@ func (g *Game) Draw(out *ebiten.Image) {
 	} else {
 		g.scenes.Draw(g.ctx, g.screen)
 	}
+	if debug.Enabled {
+		g.drawOverlay()
+	}
 	g.present(out)
+}
+
+// drawOverlay shows the debug readout in the bottom-left corner: ticks and
+// frames per second, the tick count and the current scene (DESIGN §11).
+func (g *Game) drawOverlay() {
+	sc, f := g.ctx.Scheme, g.ctx.Fonts.Small
+	name := strings.TrimPrefix(fmt.Sprintf("%T", g.scenes.Current()), "*")
+	if g.showPattern {
+		name = "test pattern"
+	}
+	lines := []string{
+		fmt.Sprintf("%.0f TPS %.0f FPS", ebiten.ActualTPS(), ebiten.ActualFPS()),
+		fmt.Sprintf("T%d %s", g.ctx.Tick, name),
+	}
+	w := 0
+	for _, l := range lines {
+		w = max(w, f.Width(l))
+	}
+	lh := f.Size + 2
+	h := len(lines) * lh
+	y := g.preset.ScreenHeight - h - 2
+	ui.Panel(g.screen, image.Rect(0, y-2, w+4, g.preset.ScreenHeight), sc.Panel, sc.Border)
+	for i, l := range lines {
+		f.Draw(g.screen, l, 2, y+i*lh, sc.Highlight)
+	}
 }
 
 // present scales the internal screen onto the output surface in the

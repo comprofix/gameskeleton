@@ -10,6 +10,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/comprofix/gameskeleton/internal/config"
+	"github.com/comprofix/gameskeleton/internal/debug"
 	"github.com/comprofix/gameskeleton/internal/demo/world"
 	"github.com/comprofix/gameskeleton/internal/gfx"
 	"github.com/comprofix/gameskeleton/internal/input"
@@ -154,6 +155,21 @@ func (p *Play) Draw(ctx *scene.Context, dst *ebiten.Image) {
 	}
 	x, y := slide(w.Player, ox, oy)
 	player.Draw(dst, int(p.ticks/bobTicks), x, y, w.FacesLeft)
+
+	// Debug builds outline the cells the rules see, which can differ from
+	// where things are drawn while they slide (DESIGN §11).
+	if debug.Enabled {
+		box := func(c world.Point) {
+			debug.Box(dst, float64(ox+c.X*Cell), float64(oy+c.Y*Cell), Cell, Cell, sc.Highlight)
+		}
+		box(w.Player.Pos)
+		for _, h := range w.Hazards {
+			box(h.Pos)
+		}
+		for _, d := range w.Dots {
+			box(d)
+		}
+	}
 }
 
 // boardOrigin is the screen position of the board's top-left cell: centred

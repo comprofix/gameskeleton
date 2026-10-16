@@ -23,6 +23,12 @@ type Scene interface {
 	Draw(ctx *Context, dst *ebiten.Image)
 }
 
+// NewRNG is the random number generator for a seed. The game and tests
+// both use it, so a seed gives the same game in each.
+func NewRNG(seed uint64) *rand.Rand {
+	return rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15))
+}
+
 // Context is the shared state handed to scenes. Games add their own fields.
 type Context struct {
 	Input    *input.Input

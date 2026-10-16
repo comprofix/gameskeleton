@@ -176,6 +176,7 @@ cmd/<game>/        main.go: flags, saved files, window, run
 internal/
   game/            ebiten.Game: scenes, window keys, scale modes, presentation
   scene/           scene manager, fades, shake, shared scenes
+  scene/scenetest/ headless test harness, golden files
   ui/              list menu, panel, text helpers
   config/          project.go, settings, tuning values, skills, levels
   session/         one game in progress
@@ -243,6 +244,9 @@ assets/            assets.go, sprites/, gen/, font/
   or sound.
 - Prefer golden replay tests (seed plus inputs → expected final state) for
   gameplay sequences.
+- `internal/scene/scenetest` runs scenes headless from a seed and scripted
+  input, and `scenetest.Golden` compares results with `testdata/*.golden`.
+  After an intended change, rewrite them with `go test ./<package> -update`.
 - Run `go vet ./...` and `go test ./...` before saying work is done.
 - Visual and audio work: check by hand against a short checklist at each
   milestone, and offer screenshots for the user to review.
