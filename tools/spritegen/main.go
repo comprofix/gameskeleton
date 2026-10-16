@@ -54,7 +54,7 @@ func run(o options) error {
 		return err
 	}
 	if len(srcs) == 0 {
-		return fmt.Errorf("no *.txt sprite sources in %s", o.in)
+		return nil // a game with no sprites yet: nothing to make
 	}
 	var font *bitfont.Font
 	if o.previewDir != "" {

@@ -87,9 +87,12 @@ func TestTitleToOptionsAndBack(t *testing.T) {
 	h.press(ebiten.KeyEnter)
 	opts := current[*Options](t, h)
 
-	// Down to Reduced motion (Scale is disabled in the Modern preset, so the
-	// cursor starts on Fullscreen) and toggle it.
-	for range 8 {
+	// Down to Reduced motion and toggle it. Where the cursor starts depends
+	// on the preset: Scale is disabled when there is only one scale mode.
+	for range len(opts.menu.Items) {
+		if opts.menu.Items[opts.menu.Cursor].Label == "Reduced motion" {
+			break
+		}
 		h.press(ebiten.KeyArrowDown)
 	}
 	if got := opts.menu.Items[opts.menu.Cursor].Label; got != "Reduced motion" {

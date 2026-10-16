@@ -18,7 +18,6 @@ import (
 	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/debug"
-	"github.com/comprofix/gameskeleton/internal/demo"
 	"github.com/comprofix/gameskeleton/internal/gfx"
 	"github.com/comprofix/gameskeleton/internal/input"
 	"github.com/comprofix/gameskeleton/internal/scene"
@@ -33,6 +32,19 @@ type Saved struct {
 	Scores   *score.Tables // nil for empty tables
 	Dir      string
 }
+
+// Content is the game's own part, which the shared scenes don't know
+// about: how to start a game, its sounds, and the sprite sheets to load
+// from assets/gen.
+type Content struct {
+	NewPlay func(ctx *scene.Context, skill config.Skill) scene.Scene
+	Sounds  audio.Bank
+	Sheets  []string
+}
+
+// content is set once, at start-up, by the file that wires in the game
+// (demo.go in the skeleton). With none, Play is disabled in the menu.
+var content Content
 
 // Game is the top-level ebiten.Game.
 type Game struct {
@@ -62,9 +74,13 @@ func New(seed uint64, saved Saved, synth *audio.Synth) (*Game, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fonts: %w", err)
 	}
-	demoSheet, err := gfx.LoadSheet(assets.FS, "gen/demo")
-	if err != nil {
-		return nil, fmt.Errorf("demo sheet: %w", err)
+	sheets := map[string]*gfx.Sheet{}
+	for _, name := range content.Sheets {
+		sh, err := gfx.LoadSheet(assets.FS, "gen/"+name)
+		if err != nil {
+			return nil, fmt.Errorf("sprite sheet %s: %w", name, err)
+		}
+		sheets[name] = sh
 	}
 	g := &Game{
 		preset:   p,
@@ -78,10 +94,10 @@ func New(seed uint64, saved Saved, synth *audio.Synth) (*Game, error) {
 		RNG:     scene.NewRNG(seed),
 		Fonts:   fonts,
 		Scheme:  gfx.SchemeFor(p.Palette),
-		Sheets:  map[string]*gfx.Sheet{"demo": demoSheet},
-		NewPlay: demo.NewPlay,
+		Sheets:  sheets,
+		NewPlay: content.NewPlay,
 		Audio:   synth,
-		Sounds:  audio.Join(scene.Sounds, demo.Sounds),
+		Sounds:  audio.Join(scene.Sounds, content.Sounds),
 		Scores:  saved.Scores,
 	}
 	g.ctx.Settings = &g.settings

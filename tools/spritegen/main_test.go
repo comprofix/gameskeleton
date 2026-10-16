@@ -70,8 +70,12 @@ func TestRun(t *testing.T) {
 
 func TestRunErrors(t *testing.T) {
 	dir := t.TempDir()
-	if err := run(options{in: dir, out: filepath.Join(dir, "gen"), pal: resurrect64.Palette}); err == nil {
-		t.Error("an empty sprite folder should be an error")
+	// A game with no sprites yet is fine: nothing is written.
+	if err := run(options{in: dir, out: filepath.Join(dir, "gen"), pal: resurrect64.Palette}); err != nil {
+		t.Errorf("an empty sprite folder: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "gen")); err == nil {
+		t.Error("an empty sprite folder wrote output")
 	}
 	os.WriteFile(filepath.Join(dir, "bad.txt"), []byte("sprite a 1 1\nz\n"), 0o644)
 	if err := run(options{in: dir, out: filepath.Join(dir, "gen"), pal: resurrect64.Palette}); err == nil {

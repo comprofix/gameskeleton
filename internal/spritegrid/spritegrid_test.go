@@ -2,7 +2,6 @@ package spritegrid
 
 import (
 	"image/color"
-	"os"
 	"strings"
 	"testing"
 
@@ -149,20 +148,5 @@ func TestPack(t *testing.T) {
 	}
 	if _, _, err := Pack([]Sprite{{Name: "a", W: 1, H: 1, Frames: [][]int{{99}}}}, sweetie16.Palette); err == nil {
 		t.Error("colour outside the palette not rejected")
-	}
-}
-
-func TestDemoSprites(t *testing.T) {
-	f, err := os.Open("../../assets/sprites/demo.txt")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer f.Close()
-	sprites, err := Parse(f, resurrect64.Palette)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, _, err := Pack(sprites, resurrect64.Palette); err != nil {
-		t.Fatal(err)
 	}
 }

@@ -1,4 +1,5 @@
-// Command gameskeleton runs the skeleton's demo game (DESIGN §3).
+// Command gameskeleton starts the game: it loads the saved files, opens the
+// window and runs the scenes (DESIGN §3).
 package main
 
 import (

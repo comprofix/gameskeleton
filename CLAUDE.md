@@ -40,18 +40,32 @@ either is missing:
    - Theme, hero, controls, main rules, scoring, difficulty and any special
      mechanics.
    - What is not included in v1.
+   - Whether to keep the Dot Dash demo for reference (it is removed by
+     default).
 3. **Summarise the answers and wait for the go-ahead.** Then:
    1. Run `go run ./tools/newgame -module … -name … -title "…"`. Add
-      `-keep-demo` only if asked.
-   2. Set the title and the preset in `internal/config/project.go`: `Modern`,
-      `Classic`, or a custom `Preset` added to `internal/config/preset.go`.
+      `-keep-demo` only if asked. It renames the module, the command folder
+      and the commands in §5, sets the title, writes a new README and removes
+      itself.
+   2. Set the preset in `internal/config/project.go`: `Modern`, `Classic`,
+      or a custom `Preset` added to `internal/config/preset.go`.
    3. Write `DESIGN.md` and `PLAN.md` using the outlines below. Mark anything
       not yet decided as **(open)** in the decisions table.
    4. Change §1 of this file to describe the game, including its fixed
-      decisions. Change the names in §5's commands. Remove §11.
+      decisions. Replace this §2 with the short section below. Remove §11.
    5. Run `go vet ./...` and `go test ./...`.
 4. **Hand back:** show the documents, list the open decisions, and stop. Do not
    write game code or commit until the user says so.
+
+### Replacement §2 for a game
+
+```
+## 2. Working documents
+
+DESIGN.md and PLAN.md are local and not tracked in git. If either is missing
+at the start of a session, ask the user for their copies before doing
+anything else. Don't write new ones unless the user asks.
+```
 
 ### DESIGN.md outline
 
@@ -168,6 +182,16 @@ libxxf86vm-dev libasound2-dev pkg-config`. Build them in WSL.
   does something.
 - Alt+Enter, F9, F10 and F11 are reserved for the window and never trigger
   game actions.
+- The game plugs into the shared scenes through `game.Content` (its play
+  scene, sounds and sprite sheets), set in one file such as
+  `internal/game/<game>.go`. Until it is set, Play is disabled in the main
+  menu:
+
+  ```go
+  func init() {
+  	content = Content{NewPlay: play.New, Sounds: play.Sounds, Sheets: []string{"<game>"}}
+  }
+  ```
 
 ### Package map
 
