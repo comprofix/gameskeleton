@@ -21,12 +21,14 @@ import (
 	"github.com/comprofix/gameskeleton/internal/gfx"
 	"github.com/comprofix/gameskeleton/internal/input"
 	"github.com/comprofix/gameskeleton/internal/scene"
+	"github.com/comprofix/gameskeleton/internal/score"
 )
 
 // Saved is what was loaded from the saved files, and where they live
 // (DESIGN §10). An empty Dir saves nothing.
 type Saved struct {
 	Settings config.Settings
+	Scores   *score.Tables // nil for empty tables
 	Dir      string
 }
 
@@ -77,8 +79,12 @@ func New(seed uint64, saved Saved, synth *audio.Synth) (*Game, error) {
 		NewPlay: demo.NewPlay,
 		Audio:   synth,
 		Sounds:  audio.Join(scene.Sounds, demo.Sounds),
+		Scores:  saved.Scores,
 	}
 	g.ctx.Settings = &g.settings
+	if g.ctx.Scores == nil {
+		g.ctx.Scores = score.New()
+	}
 	g.applySound()
 	g.scenes = scene.NewManager(scene.NewTitle())
 	return g, nil
@@ -123,6 +129,9 @@ func (g *Game) Update() error {
 		g.applySettings()
 		g.saveSettings()
 	}
+	if g.ctx.TakeScoresChanged() {
+		g.saveScores()
+	}
 	return nil
 }
 
@@ -155,6 +164,17 @@ func (g *Game) saveSettings() {
 	}
 	if err := config.SaveSettings(filepath.Join(g.dir, config.SettingsFile), *s); err != nil {
 		log.Printf("saving settings: %v", err)
+	}
+}
+
+// saveScores writes the high score tables (DESIGN §10). A failure is logged,
+// never fatal.
+func (g *Game) saveScores() {
+	if g.dir == "" {
+		return
+	}
+	if err := g.ctx.Scores.Save(filepath.Join(g.dir, config.ScoresFile)); err != nil {
+		log.Printf("saving scores: %v", err)
 	}
 }
 

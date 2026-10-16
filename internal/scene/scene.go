@@ -11,6 +11,8 @@ import (
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/gfx"
 	"github.com/comprofix/gameskeleton/internal/input"
+	"github.com/comprofix/gameskeleton/internal/score"
+	"github.com/comprofix/gameskeleton/internal/session"
 )
 
 // Scene is one screen of the game.
@@ -30,9 +32,11 @@ type Context struct {
 	Sheets   map[string]*gfx.Sheet
 	Settings *config.Settings
 	Shake    Shaker
-	Tick     int64        // ticks since the game started
-	Audio    *audio.Synth // nil in tests: every call is then ignored
-	Sounds   audio.Bank   // every tune and effect, for the sound test
+	Tick     int64            // ticks since the game started
+	Audio    *audio.Synth     // nil in tests: every call is then ignored
+	Sounds   audio.Bank       // every tune and effect, for the sound test
+	Session  *session.Session // the game in progress, if any
+	Scores   *score.Tables
 
 	// NewPlay starts a game at the given skill. The game package sets it,
 	// so the shared scenes don't depend on the game's own packages.
@@ -42,6 +46,7 @@ type Context struct {
 	cut             bool
 	quit            bool
 	settingsChanged bool
+	scoresChanged   bool
 }
 
 // Switch asks the manager to fade to s at the end of this tick.
@@ -66,6 +71,18 @@ func (c *Context) SettingsChanged() { c.settingsChanged = true }
 func (c *Context) TakeSettingsChanged() bool {
 	ch := c.settingsChanged
 	c.settingsChanged = false
+	return ch
+}
+
+// ScoresChanged records that a score was added, so the game saves the
+// tables.
+func (c *Context) ScoresChanged() { c.scoresChanged = true }
+
+// TakeScoresChanged reports whether the scores changed since the last call,
+// and clears the flag.
+func (c *Context) TakeScoresChanged() bool {
+	ch := c.scoresChanged
+	c.scoresChanged = false
 	return ch
 }
 

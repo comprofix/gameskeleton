@@ -20,6 +20,12 @@ var (
 		Notes: []audio.Note{audio.N("C6", 3), audio.N("G6", 6)},
 	}}
 
+	// TallyTick is a point counting up on the tally.
+	TallyTick = &audio.Effect{Name: "tally tick", Channel: 1, Priority: 1, Part: audio.Part{
+		Voice: blip,
+		Notes: []audio.Note{audio.N("A6", 2)},
+	}}
+
 	// TitleTune loops on the title and menus: four bars of C, Am, F, G.
 	TitleTune = &audio.Tune{Name: "title", Loop: true, Parts: []audio.Part{
 		{Voice: lead, Notes: audio.Notes(
@@ -47,7 +53,7 @@ var (
 // Sounds are the shared scenes' sounds, for the sound test.
 var Sounds = audio.Bank{
 	Tunes:   []*audio.Tune{TitleTune},
-	Effects: []*audio.Effect{MenuMove, MenuConfirm},
+	Effects: []*audio.Effect{MenuMove, MenuConfirm, TallyTick},
 }
 
 // Voices.

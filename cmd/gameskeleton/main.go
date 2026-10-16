@@ -12,6 +12,7 @@ import (
 	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/game"
+	"github.com/comprofix/gameskeleton/internal/score"
 )
 
 func main() {
@@ -21,11 +22,12 @@ func main() {
 		*seed = uint64(time.Now().UnixNano())
 	}
 
-	// The settings live beside the game (DESIGN §10).
+	// The settings and scores live beside the game (DESIGN §10).
 	p := config.Project
 	dir := config.SaveDir()
 	saved := game.Saved{
 		Settings: config.LoadSettings(filepath.Join(dir, config.SettingsFile), p),
+		Scores:   score.Load(filepath.Join(dir, config.ScoresFile), config.Skills),
 		Dir:      dir,
 	}
 

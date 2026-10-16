@@ -378,20 +378,34 @@ func onset(xs []float64) int {
 	return -1
 }
 
+// runDevice runs the game for ticks ticks with a device reading 50 ms
+// chunks in step with it, triggering an effect at trigger, and returns the
+// output.
+func runDevice(t *testing.T, ticks, trigger int64) []float64 {
+	const chunk = 3 * sr / config.TPS
+	s := NewSynth(config.Chip4)
+	var out []float64
+	for tick := range ticks {
+		s.Now(tick)
+		if tick == trigger {
+			s.PlayEffect(tone(Pulse50, 441, time.Second))
+		}
+		if tick%3 == 0 {
+			out = append(out, render(t, s, chunk)...)
+		}
+	}
+	return out
+}
+
 func TestScheduledOnTheTick(t *testing.T) {
 	const perTick = sr / config.TPS
-	base := config.AudioScheduleMs * sr / 1000
-	for _, tick := range []int64{1, 5, 9} {
-		s := NewSynth(config.Chip4)
-		s.Now(0)
-		s.Now(tick)
-		s.PlayEffect(tone(Pulse50, 441, time.Second))
-		out := render(t, s, base+12*perTick)
-		want := base + int(tick)*perTick
-		// The note starts on its sample; the attack ramp means the first
-		// audible sample is at most a couple later.
-		if got := onset(out); got < want || got > want+2 {
-			t.Errorf("tick %d: sound starts at sample %d, want %d", tick, got, want)
+	// Triggered a tick apart, sounds start exactly a tick's samples apart,
+	// whatever the device's chunks.
+	first := onset(runDevice(t, 80, 30))
+	for k := range int64(5) {
+		got := onset(runDevice(t, 80, 30+k))
+		if want := first + int(k)*perTick; got < want || got > want+2 {
+			t.Errorf("triggered at tick %d: starts at sample %d, want %d", 30+k, got, want)
 		}
 	}
 }
@@ -455,5 +469,50 @@ func TestBankCheck(t *testing.T) {
 	once := Bank{Tunes: []*Tune{{Name: "t", Parts: []Part{part(10), part(11)}}}}
 	if err := once.Check(); err != nil {
 		t.Errorf("tune without loop: %v", err)
+	}
+}
+
+func TestTuneStartedWhileOffIsHeardWhenSwitchedOn(t *testing.T) {
+	s := NewSynth(config.Chip4)
+	s.SetEnabled(false)
+	s.PlayTune(&Tune{Loop: true, Parts: []Part{{Voice: Voice{Wave: Pulse50}, Notes: []Note{{Hz: 441, Dur: time.Second}}}}})
+	if p := peak(render(t, s, sr/2)); p != 0 {
+		t.Fatalf("peak %v while sound is off", p)
+	}
+	s.SetEnabled(true)
+	if p := peak(render(t, s, sr/2)); p == 0 {
+		t.Error("the tune is silent after sound is switched on")
+	}
+}
+
+// TestNoExtraDelayWhenTheDeviceStartsLate runs the game and a device that
+// reads 50 ms chunks in step with it but starts 9 ticks later, as a real
+// one does. An effect must still play within the fixed delay plus one
+// chunk of when it was triggered, not wait out the device's late start.
+func TestNoExtraDelayWhenTheDeviceStartsLate(t *testing.T) {
+	const (
+		perTick = sr / config.TPS
+		chunk   = 3 * perTick // 50 ms
+		start   = 9           // the device's first read, in ticks
+		trigger = 60
+	)
+	base := config.AudioScheduleMs * sr / 1000
+	s := NewSynth(config.Chip4)
+	var out []float64
+	triggeredAt := -1
+	for tick := range int64(trigger + 40) {
+		s.Now(tick)
+		if tick == trigger {
+			s.PlayEffect(tone(Pulse50, 441, time.Second))
+			triggeredAt = len(out)
+		}
+		if tick >= start && tick%3 == 0 {
+			out = append(out, render(t, s, chunk)...)
+		}
+	}
+	delay := onset(out[triggeredAt:])
+	if delay < 0 || delay > base+chunk+perTick {
+		t.Errorf("effect started %d samples after it was triggered, want at most %d (%d ms)",
+			delay, base+chunk+perTick, (base+chunk+perTick)*1000/sr)
 	}
 }

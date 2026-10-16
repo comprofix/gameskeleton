@@ -9,6 +9,7 @@ import (
 	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/input"
+	"github.com/comprofix/gameskeleton/internal/score"
 )
 
 // harness runs scenes headless: Update only, never Draw.
@@ -31,6 +32,7 @@ func newHarness(t *testing.T, first Scene) *harness {
 			RNG:      rand.New(rand.NewPCG(1, 2)),
 			Settings: &set,
 			NewPlay:  func(*Context, config.Skill) Scene { return &stubPlay{} },
+			Scores:   score.New(),
 		},
 	}
 	h.ticks(FadeTicks) // the opening fade-in

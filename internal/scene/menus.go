@@ -52,7 +52,7 @@ func (s *MainMenu) Update(ctx *Context) error {
 		s.menu.Items = []ui.Item{
 			{Label: "Play", Disabled: ctx.NewPlay == nil, Confirm: func() { ctx.Switch(NewSkillSelect()) }},
 			{Label: "Options", Confirm: func() { ctx.Switch(NewOptions(func() Scene { return NewMainMenu() })) }},
-			{Label: "High scores", Disabled: true}, // the tables come with the saved scores
+			{Label: "High scores", Confirm: func() { ctx.Switch(NewHighScoreTable(config.Skills[0], -1)) }},
 			{Label: "Quit", Confirm: ctx.Quit},
 		}
 		menuSounds(ctx, &s.menu)

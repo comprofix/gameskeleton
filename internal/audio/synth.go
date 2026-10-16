@@ -33,6 +33,7 @@ type Synth struct {
 	pos     int64
 	timed   bool
 	latency int64 // the current delay, in samples; it widens to cover the device's read-ahead
+	chunk   int64 // the size of the device's last read, in samples
 	stamp   int64
 	offset  int64
 
@@ -166,9 +167,11 @@ func (s *Synth) Now(tick int64) {
 	// Anchor the game clock to the audio clock. The device reads audio
 	// ahead in chunks by an amount we cannot know, so if a command would
 	// already be late, widen the delay to cover it and re-anchor; this
-	// settles after a moment. If the clocks drift far apart, re-anchor too.
+	// settles after a moment. If commands would wait longer than the delay
+	// plus one read, re-anchor too: the device started after the game, or
+	// the clocks drifted, and every sound would play that much late.
 	ahead := at + s.offset - s.pos
-	if !s.timed || ahead < 0 || ahead > 4*s.latency {
+	if !s.timed || ahead < 0 || ahead > s.latency+max(s.chunk, perTick)+perTick {
 		// A little late: the device reads further ahead than allowed for.
 		// Very late means the game stalled, which needs no wider delay.
 		if s.timed && ahead < 0 && -ahead <= most {
@@ -251,6 +254,7 @@ func (s *Synth) Read(p []byte) (int, error) {
 	defer s.mu.Unlock()
 	dc := math.Exp(-2 * math.Pi * config.AudioDCBlockHz / config.AudioSampleRate)
 	n := len(p) / 4
+	s.chunk = int64(n)
 	for i := range n {
 		for len(s.queue) > 0 && s.queue[0].at <= s.pos {
 			s.apply(s.queue[0])
