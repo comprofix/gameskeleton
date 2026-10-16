@@ -11,8 +11,19 @@ type Item struct {
 	Label    string
 	Value    func() string // optional: shown after the label, e.g. "On"
 	Disabled bool
-	Confirm  func()        // Confirm on this item
-	Adjust   func(dir int) // Left (-1) or Right (+1) on this item
+	// DisabledIf, if set, disables the item while it returns true, e.g. a
+	// volume while its sound is switched off.
+	DisabledIf func() bool
+	// Slider, if set, makes the item a slider: a bar filled to its 0–1 value
+	// and the value as a percentage, in place of Value.
+	Slider  func() float64
+	Confirm func()        // Confirm on this item
+	Adjust  func(dir int) // Left (-1) or Right (+1) on this item
+}
+
+// IsDisabled reports whether the item can't be chosen right now.
+func (it Item) IsDisabled() bool {
+	return it.Disabled || (it.DisabledIf != nil && it.DisabledIf())
 }
 
 // Menu is a vertical list of items with a cursor. Up and Down move (with
@@ -40,7 +51,7 @@ func (m *Menu) Update(in *input.Input) {
 		m.move(1)
 	case in.JustPressed(input.Confirm):
 		it := m.Items[m.Cursor]
-		if it.Disabled {
+		if it.IsDisabled() {
 			return
 		}
 		if it.Confirm != nil {
@@ -70,7 +81,7 @@ func (m *Menu) step(dir int) bool {
 	start := m.Cursor
 	for range m.Items {
 		m.Cursor = (m.Cursor + dir + len(m.Items)) % len(m.Items)
-		if !m.Items[m.Cursor].Disabled {
+		if !m.Items[m.Cursor].IsDisabled() {
 			break
 		}
 	}
@@ -79,7 +90,7 @@ func (m *Menu) step(dir int) bool {
 
 func (m *Menu) adjust(dir int) {
 	it := m.Items[m.Cursor]
-	if it.Disabled || it.Adjust == nil {
+	if it.IsDisabled() || it.Adjust == nil {
 		return
 	}
 	it.Adjust(dir)
@@ -92,14 +103,18 @@ func (m *Menu) adjust(dir int) {
 // silently.
 func (m *Menu) skipDisabled(dir int) {
 	m.Cursor = min(max(m.Cursor, 0), len(m.Items)-1)
-	if m.Items[m.Cursor].Disabled {
+	if m.Items[m.Cursor].IsDisabled() {
 		m.step(dir)
 	}
 }
 
-// Text returns item i's text as drawn: the label, then its value if any.
+// Text returns item i's text: the label, then its value if any. A slider's
+// value is its percentage.
 func (m *Menu) Text(i int) string {
 	it := m.Items[i]
+	if it.Slider != nil {
+		return it.Label + ": " + percent(min(max(it.Slider(), 0), 1))
+	}
 	if it.Value == nil {
 		return it.Label
 	}

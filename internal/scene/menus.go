@@ -1,7 +1,6 @@
 package scene
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -22,7 +21,9 @@ func drawMenuScreen(ctx *Context, dst *ebiten.Image, heading string, m *ui.Menu,
 	dst.Fill(gfx.RGBA(sc.Backdrop))
 	y := f.Large.Size
 	ui.TextCentred(dst, f.Large, heading, y, sc.Title, sc.Shadow)
-	drawMenuPanel(ctx, dst, m, y+2*f.Large.Size)
+	// The panel's border sits a line gap below the heading, so long menus
+	// still fit on a 200-pixel screen.
+	drawMenuPanel(ctx, dst, m, y+f.Large.Size+ui.LineGap+menuPad)
 	if help != "" {
 		ui.TextCentred(dst, f.Small, help, config.Project.ScreenHeight-2*f.Small.Size, sc.Dim, sc.Shadow)
 	}
@@ -132,35 +133,15 @@ func (s *Options) items(ctx *Context) []ui.Item {
 	toggle := func(v *bool) func(int) {
 		return func(int) { *v = !*v; ctx.SettingsChanged() }
 	}
-	volume := func(v *float64) (func() string, func(int)) {
-		show := func() string { return fmt.Sprintf("%d/%d", steps(*v), VolumeSteps) }
-		adjust := func(d int) {
-			*v = float64(min(max(steps(*v)+d, 0), VolumeSteps)) / VolumeSteps
-			ctx.SettingsChanged()
-		}
-		return show, adjust
-	}
-	masterShow, masterAdjust := volume(&set.MasterVolume)
-	// switchable is a volume that Confirm turns off and on; Left or Right
-	// turns it back on before changing it.
-	switchable := func(label string, on *bool, v *float64) ui.Item {
-		show, adjust := volume(v)
+	// volume is a slider for v, dimmed and skipped while its sound is off.
+	volume := func(label string, on *bool, v *float64) ui.Item {
 		return ui.Item{
-			Label: label,
-			Value: func() string {
-				if !*on {
-					return "Off"
-				}
-				return show()
-			},
-			Confirm: func() { *on = !*on; ctx.SettingsChanged() },
+			Label:      label,
+			Slider:     func() float64 { return *v },
+			DisabledIf: func() bool { return !*on },
 			Adjust: func(d int) {
-				if !*on {
-					*on = true
-					ctx.SettingsChanged()
-					return
-				}
-				adjust(d)
+				*v = float64(min(max(steps(*v)+d, 0), VolumeSteps)) / VolumeSteps
+				ctx.SettingsChanged()
 			},
 		}
 	}
@@ -179,9 +160,11 @@ func (s *Options) items(ctx *Context) []ui.Item {
 			}},
 		{Label: "Fullscreen", Value: ui.OnOff(&set.Fullscreen), Adjust: toggle(&set.Fullscreen)},
 		{Label: "Sound", Value: ui.OnOff(&set.SoundOn), Adjust: toggle(&set.SoundOn)},
-		{Label: "Volume", Value: masterShow, Adjust: masterAdjust},
-		switchable("Music", &set.MusicOn, &set.MusicVolume),
-		switchable("Effects", &set.SFXOn, &set.SFXVolume),
+		volume("Volume", &set.SoundOn, &set.MasterVolume),
+		{Label: "Music", Value: ui.OnOff(&set.MusicOn), Adjust: toggle(&set.MusicOn)},
+		volume("Music volume", &set.MusicOn, &set.MusicVolume),
+		{Label: "Effects", Value: ui.OnOff(&set.SFXOn), Adjust: toggle(&set.SFXOn)},
+		volume("Effects volume", &set.SFXOn, &set.SFXVolume),
 		{Label: "Sound test", Confirm: func() {
 			ctx.Switch(NewSoundTest(func() Scene { return NewOptions(s.back) }))
 		}},

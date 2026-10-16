@@ -99,3 +99,26 @@ func TestSkippingADisabledItemIsSilent(t *testing.T) {
 	in.Update()
 	m.Update(in)
 }
+
+func TestDisabledIfIsSkippedAndSliderText(t *testing.T) {
+	on, v := false, 0.6
+	m := &Menu{Items: []Item{
+		{Label: "Music", Adjust: func(int) { on = !on }},
+		{Label: "Music volume", Slider: func() float64 { return v }, DisabledIf: func() bool { return !on },
+			Adjust: func(d int) { v += 0.1 * float64(d) }},
+		{Label: "Back"},
+	}}
+	in := feed(input.Press(ebiten.KeyArrowDown), input.Idle(1), input.Press(ebiten.KeyArrowUp), input.Idle(1),
+		input.Press(ebiten.KeyEnter), input.Idle(1), input.Press(ebiten.KeyArrowDown))
+	want := []int{2, 2, 0, 0, 0, 0, 1} // off: the slider is skipped; on: it is not
+	for i, w := range want {
+		in.Update()
+		m.Update(in)
+		if m.Cursor != w {
+			t.Fatalf("tick %d: cursor %d, want %d", i, m.Cursor, w)
+		}
+	}
+	if got := m.Text(1); got != "Music volume: 60%" {
+		t.Errorf("slider text %q", got)
+	}
+}

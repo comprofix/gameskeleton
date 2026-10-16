@@ -87,7 +87,7 @@ func TestTitleToOptionsAndBack(t *testing.T) {
 
 	// Down to Reduced motion (Scale is disabled in the Modern preset, so the
 	// cursor starts on Fullscreen) and toggle it.
-	for range 6 {
+	for range 8 {
 		h.press(ebiten.KeyArrowDown)
 	}
 	if got := opts.menu.Items[opts.menu.Cursor].Label; got != "Reduced motion" {
@@ -109,7 +109,7 @@ func TestVolumeSteps(t *testing.T) {
 	h.ticks(1) // builds the items
 	opts := current[*Options](t, h)
 	h.ctx.Settings.MusicVolume = 0.8
-	for opts.menu.Items[opts.menu.Cursor].Label != "Music" {
+	for opts.menu.Items[opts.menu.Cursor].Label != "Music volume" {
 		h.press(ebiten.KeyArrowDown)
 	}
 	h.press(ebiten.KeyArrowRight)
@@ -118,18 +118,18 @@ func TestVolumeSteps(t *testing.T) {
 	if h.ctx.Settings.MusicVolume != 1 {
 		t.Errorf("music volume %v, want 1", h.ctx.Settings.MusicVolume)
 	}
-	if got := opts.menu.Text(opts.menu.Cursor); got != "Music: 10/10" {
+	if got := opts.menu.Text(opts.menu.Cursor); got != "Music volume: 100%" {
 		t.Errorf("shows %q", got)
 	}
 }
 
-func TestMusicSwitch(t *testing.T) {
+func TestMusicSwitchDimsItsSlider(t *testing.T) {
 	h := newHarness(t, NewOptions(func() Scene { return NewMainMenu() }))
 	h.ticks(1)
 	opts := current[*Options](t, h)
 	set := h.ctx.Settings
-	set.MusicVolume = 0.5
-	for opts.menu.Items[opts.menu.Cursor].Label != "Music" {
+	label := func() string { return opts.menu.Items[opts.menu.Cursor].Label }
+	for label() != "Music" {
 		h.press(ebiten.KeyArrowDown)
 	}
 	h.press(ebiten.KeyEnter)
@@ -139,9 +139,15 @@ func TestMusicSwitch(t *testing.T) {
 	if !set.SFXOn {
 		t.Error("turning the music off turned the effects off")
 	}
-	h.press(ebiten.KeyArrowLeft) // turns it back on without changing the level
-	if !set.MusicOn || set.MusicVolume != 0.5 {
-		t.Errorf("after Left: on %v, volume %v; want on at 0.5", set.MusicOn, set.MusicVolume)
+	h.press(ebiten.KeyArrowDown)
+	if label() != "Effects" {
+		t.Errorf("Down from Music Off went to %q, want the slider skipped", label())
+	}
+	h.press(ebiten.KeyArrowUp)
+	h.press(ebiten.KeyEnter) // music back on
+	h.press(ebiten.KeyArrowDown)
+	if !set.MusicOn || label() != "Music volume" {
+		t.Errorf("with music on, Down went to %q (music on: %v)", label(), set.MusicOn)
 	}
 }
 

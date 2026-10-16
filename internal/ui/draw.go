@@ -2,6 +2,8 @@ package ui
 
 import (
 	"image"
+	"math"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -13,31 +15,83 @@ import (
 // LineGap is the space between menu lines, in pixels.
 const LineGap = 4
 
+// SliderCells is a slider's width, in character cells of the menu's font.
+const SliderCells = 10
+
 // Size returns the menu's width and height in font's pixels, including the
 // cursor's column.
 func (m *Menu) Size(font *gfx.Font) (w, h int) {
-	for i := range m.Items {
-		w = max(w, font.Width(m.Text(i)))
+	col := m.sliderColumn(font)
+	for i, it := range m.Items {
+		if it.Slider != nil {
+			w = max(w, col+(SliderCells+1)*font.Size+font.Width("100%"))
+		} else {
+			w = max(w, font.Width(m.Text(i)))
+		}
 	}
 	w += 2 * font.Size // the "> " cursor
 	return w, len(m.Items)*(font.Size+LineGap) - LineGap
 }
 
 // Draw draws the menu with its top-left corner at (x, y): disabled items in
-// sc.Dim, the selected item in sc.Highlight after a "> " cursor.
+// sc.Dim, the selected item in sc.Highlight after a "> " cursor. Sliders
+// line up in one column, each followed by its percentage.
 func (m *Menu) Draw(dst *ebiten.Image, font *gfx.Font, x, y int, sc gfx.Scheme) {
+	col := m.sliderColumn(font)
 	for i := range m.Items {
 		c := sc.Text
 		switch {
-		case m.Items[i].Disabled:
+		case m.Items[i].IsDisabled():
 			c = sc.Dim
 		case i == m.Cursor:
 			c = sc.Highlight
 			font.DrawShadowed(dst, ">", x, y, c, sc.Shadow)
 		}
-		font.DrawShadowed(dst, m.Text(i), x+2*font.Size, y, c, sc.Shadow)
+		tx := x + 2*font.Size
+		if s := m.Items[i].Slider; s != nil {
+			v := min(max(s(), 0), 1)
+			font.DrawShadowed(dst, m.Items[i].Label, tx, y, c, sc.Shadow)
+			bx := tx + col
+			drawSlider(dst, bx, y, SliderCells*font.Size, font.Size, v, c, sc)
+			font.DrawShadowed(dst, percent(v), bx+(SliderCells+1)*font.Size, y, c, sc.Shadow)
+		} else {
+			font.DrawShadowed(dst, m.Text(i), tx, y, c, sc.Shadow)
+		}
 		y += font.Size + LineGap
 	}
+}
+
+// sliderColumn is where sliders start, after the longest slider label and a
+// space, relative to the labels.
+func (m *Menu) sliderColumn(font *gfx.Font) int {
+	col := 0
+	for _, it := range m.Items {
+		if it.Slider != nil {
+			col = max(col, font.Width(it.Label)+font.Size)
+		}
+	}
+	return col
+}
+
+// drawSlider draws a w×h bar at (x, y) filled to v (0–1) in colour c: an
+// outline with the fill one pixel inside it, and a drop shadow like text.
+func drawSlider(dst *ebiten.Image, x, y, w, h int, v float64, c int, sc gfx.Scheme) {
+	d := max(1, h/8) // as Font.DrawShadowed
+	rect := func(x, y, w, h, colour int) {
+		vector.FillRect(dst, float32(x), float32(y), float32(w), float32(h), gfx.RGBA(colour), false)
+	}
+	h-- // leave room for the shadow, like the glyphs
+	rect(x+d, y+d, w, h, sc.Shadow)
+	rect(x, y, w, h, c)
+	rect(x+1, y+1, w-2, h-2, sc.Panel)
+	if fill := int(math.Round(v * float64(w-4))); fill > 0 {
+		rect(x+2, y+2, fill, h-4, c)
+	}
+}
+
+// percent is v (0–1) as a whole percentage, e.g. "60%".
+func percent(v float64) string {
+	return strconv.Itoa(int(math.Round(v*100))) + "%"
 }
 
 // DrawCentred draws the menu centred across the screen with its top at y.
