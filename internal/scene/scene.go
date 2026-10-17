@@ -38,15 +38,28 @@ type Context struct {
 	Sheets   map[string]*gfx.Sheet
 	Settings *config.Settings
 	Shake    Shaker
-	Tick     int64            // ticks since the game started
-	Audio    *audio.Synth     // nil in tests: every call is then ignored
-	Sounds   audio.Bank       // every tune and effect, for the sound test
-	Session  *session.Session // the game in progress, if any
-	Scores   *score.Tables
+	Tick     int64        // ticks since the game started
+	Audio    *audio.Synth // nil in tests: every call is then ignored
+	Sounds   audio.Bank   // every tune and effect, for the sound test
+	// The game's own music for the shared scenes: the title and menus, and
+	// the high score screens. A nil title tune plays the skeleton's
+	// TitleTune; a nil high score tune leaves the music as it is.
+	TitleTune, ScoresTune *audio.Tune
+	Session               *session.Session // the game in progress, if any
+	Scores                *score.Tables
 
 	// NewPlay starts a game at the given skill. The game package sets it,
 	// so the shared scenes don't depend on the game's own packages.
 	NewPlay func(ctx *Context, skill config.Skill) Scene
+	// NewDemo, if set, starts the game playing itself, which the title
+	// shows behind its logo.
+	NewDemo func(ctx *Context) Scene
+
+	// StartLevel is the level new games start on; 0 or 1 is the first.
+	// The -level flag sets it, for testing; a game with levels starts
+	// its play scene there. A game started later is a test: it goes on no
+	// high score table.
+	StartLevel int
 
 	next            Scene
 	cut             bool
@@ -54,6 +67,10 @@ type Context struct {
 	settingsChanged bool
 	scoresChanged   bool
 }
+
+// Testing reports whether games are started for testing, part way in:
+// they go on no high score table.
+func (c *Context) Testing() bool { return c.StartLevel > 1 }
 
 // Switch asks the manager to fade to s at the end of this tick.
 func (c *Context) Switch(s Scene) { c.next, c.cut = s, false }

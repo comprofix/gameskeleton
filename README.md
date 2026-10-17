@@ -73,6 +73,8 @@ runs at 60 ticks per second, and all game logic counts in ticks.
    it), writes a new README, removes itself, and builds and tests the result.
 3. Set the preset in `internal/config/project.go`.
 4. Wire in your play scene, sounds and sprite sheets through `game.Content`,
+   and, if you like, a demo to run behind the title (`NewDemo`) and your own
+   title and high score tunes (`TitleTune`, `ScoresTune`),
    in a file such as `internal/game/<game>.go`. Until then, Play is greyed out
    in the menu.
 5. In `CLAUDE.md`, describe your game in §1, replace §2 with the short
@@ -84,6 +86,7 @@ runs at 60 ticks per second, and all game logic counts in ticks.
 go run ./cmd/gameskeleton                 # run the game
 go run -tags debug ./cmd/gameskeleton     # with the debug overlay and Tab test pattern
 go run ./cmd/gameskeleton -seed 42        # with a fixed random seed
+go run ./cmd/gameskeleton -level 5        # start games on level 5, for a game with levels (no scores)
 go generate ./assets                      # rebuild sprite sheets from assets/sprites/*.txt
 go run ./tools/spritegen -in assets/sprites -out assets/gen -preview <dir>   # preview sheets
 go vet ./...

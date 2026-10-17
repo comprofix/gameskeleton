@@ -140,6 +140,7 @@ anything else. Don't write new ones unless the user asks.
 go run ./cmd/gameskeleton                 # run the game
 go run -tags debug ./cmd/gameskeleton     # with the debug overlay
 go run ./cmd/gameskeleton -seed 42        # with a fixed random seed
+go run ./cmd/gameskeleton -level 5        # start games on level 5, for a game with levels (no scores)
 go generate ./assets                      # rebuild sprite sheets from assets/sprites/*.txt
 go run ./tools/spritegen -in assets/sprites -out assets/gen -preview <dir>
 go build -o bin/ ./cmd/gameskeleton
@@ -184,7 +185,8 @@ libxxf86vm-dev libasound2-dev pkg-config`. Build them in WSL.
 - Alt+Enter, F9, F10 and F11 are reserved for the window and never trigger
   game actions.
 - The game plugs into the shared scenes through `game.Content` (its play
-  scene, sounds and sprite sheets), set in one file such as
+  scene, sounds and sprite sheets; optionally a demo behind the title and
+  its own title and high score tunes), set in one file such as
   `internal/game/<game>.go`. Until it is set, Play is disabled in the main
   menu:
 

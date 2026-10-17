@@ -128,9 +128,10 @@ func (t *Tally) Draw(ctx *Context, dst *ebiten.Image) {
 }
 
 // AfterGame is where a finished game goes once its score is final: initials
-// entry if the score makes the table, otherwise the table itself.
+// entry if the score makes the table, otherwise the table itself. A game
+// started for testing (Context.Testing) is not entered.
 func AfterGame(ctx *Context, skill config.Skill, points int) Scene {
-	if ctx.Scores.Qualifies(skill.ID, points) {
+	if !ctx.Testing() && ctx.Scores.Qualifies(skill.ID, points) {
 		return NewHighScoreEntry(skill, points)
 	}
 	return NewHighScoreTable(skill, -1)
@@ -164,6 +165,7 @@ func (e *HighScoreEntry) Initials() string {
 // Update implements Scene.
 func (e *HighScoreEntry) Update(ctx *Context) error {
 	e.ticks++
+	playScoresTune(ctx)
 	in := ctx.Input
 	n := len(score.Letters)
 	switch {
@@ -245,6 +247,7 @@ func NewHighScoreTable(skill config.Skill, place int) *HighScoreTable {
 // Update implements Scene.
 func (t *HighScoreTable) Update(ctx *Context) error {
 	t.ticks++
+	playScoresTune(ctx)
 	in := ctx.Input
 	n := len(config.Skills)
 	switch {

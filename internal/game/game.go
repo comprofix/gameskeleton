@@ -38,8 +38,13 @@ type Saved struct {
 // from assets/gen.
 type Content struct {
 	NewPlay func(ctx *scene.Context, skill config.Skill) scene.Scene
+	// NewDemo, if set, runs behind the title (see scene.Context).
+	NewDemo func(ctx *scene.Context) scene.Scene
 	Sounds  audio.Bank
 	Sheets  []string
+	// The game's title and high score tunes, if it has its own (see
+	// scene.Context).
+	TitleTune, ScoresTune *audio.Tune
 }
 
 // content is set once, at start-up, by the file that wires in the game
@@ -90,15 +95,18 @@ func New(seed uint64, saved Saved, synth *audio.Synth) (*Game, error) {
 		settings: saved.Settings,
 	}
 	g.ctx = &scene.Context{
-		Input:   input.New(&input.Ebiten{}),
-		RNG:     scene.NewRNG(seed),
-		Fonts:   fonts,
-		Scheme:  gfx.SchemeFor(p.Palette),
-		Sheets:  sheets,
-		NewPlay: content.NewPlay,
-		Audio:   synth,
-		Sounds:  audio.Join(scene.Sounds, content.Sounds),
-		Scores:  saved.Scores,
+		Input:      input.New(&input.Ebiten{}),
+		RNG:        scene.NewRNG(seed),
+		Fonts:      fonts,
+		Scheme:     gfx.SchemeFor(p.Palette),
+		Sheets:     sheets,
+		NewPlay:    content.NewPlay,
+		NewDemo:    content.NewDemo,
+		Audio:      synth,
+		Sounds:     audio.Join(scene.Sounds, content.Sounds),
+		TitleTune:  content.TitleTune,
+		ScoresTune: content.ScoresTune,
+		Scores:     saved.Scores,
 	}
 	g.ctx.Settings = &g.settings
 	if g.ctx.Scores == nil {
@@ -272,6 +280,10 @@ func (g *Game) present(out *ebiten.Image) {
 	op.Filter = ebiten.FilterLinear
 	out.DrawImage(g.prescale, op)
 }
+
+// StartAt makes new games start on level n, for testing (the -level
+// flag). Such games go on no high score table.
+func (g *Game) StartAt(n int) { g.ctx.StartLevel = n }
 
 // LayoutF makes the output surface match the window in device pixels, so
 // scaling is done by present rather than by Ebitengine.

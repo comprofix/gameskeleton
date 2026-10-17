@@ -103,3 +103,16 @@ func TestHighScoreTableFromTheMenu(t *testing.T) {
 	h.press(ebiten.KeyEscape)
 	current[*MainMenu](t, h)
 }
+
+// TestTestGamesMakeNoTable checks a game started part way in, with
+// -level, is not offered the high score table.
+func TestTestGamesMakeNoTable(t *testing.T) {
+	h := newHarness(t, NewMainMenu())
+	if _, ok := AfterGame(h.ctx, config.Skills[0], 5000).(*HighScoreEntry); !ok {
+		t.Fatal("a normal game was not offered the table")
+	}
+	h.ctx.StartLevel = 20
+	if _, ok := AfterGame(h.ctx, config.Skills[0], 5000).(*HighScoreTable); !ok {
+		t.Error("a game started part way was offered the table")
+	}
+}

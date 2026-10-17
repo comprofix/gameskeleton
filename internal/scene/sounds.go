@@ -26,7 +26,8 @@ var (
 		Notes: []audio.Note{audio.N("A6", 2)},
 	}}
 
-	// TitleTune loops on the title and menus: four bars of C, Am, F, G.
+	// TitleTune loops on the title and menus, unless the game has its own
+	// (Context.TitleTune): four bars of C, Am, F, G.
 	TitleTune = &audio.Tune{Name: "title", Loop: true, Parts: []audio.Part{
 		{Voice: lead, Notes: audio.Notes(
 			"E5:12 G5:12 C6:24 B5:12 G5:12 E5:24",
@@ -88,9 +89,22 @@ func menuSounds(ctx *Context, m *ui.Menu) {
 	m.OnConfirm = func() { ctx.Audio.PlayEffect(MenuConfirm) }
 }
 
-// playTitleTune starts the title tune unless it is already playing.
+// playTitleTune starts the game's title tune, or the skeleton's if it has
+// none, unless it is already playing.
 func playTitleTune(ctx *Context) {
-	if ctx.Audio.Tune() != TitleTune {
-		ctx.Audio.PlayTune(TitleTune)
+	t := ctx.TitleTune
+	if t == nil {
+		t = TitleTune
+	}
+	if ctx.Audio.Tune() != t {
+		ctx.Audio.PlayTune(t)
+	}
+}
+
+// playScoresTune starts the game's high score tune, if it has one, unless
+// it is already playing.
+func playScoresTune(ctx *Context) {
+	if t := ctx.ScoresTune; t != nil && ctx.Audio.Tune() != t {
+		ctx.Audio.PlayTune(t)
 	}
 }

@@ -288,3 +288,46 @@ func TestSoundTest(t *testing.T) {
 		t.Error("leaving the sound test did not stop the sound")
 	}
 }
+
+// TestGameTunes checks the title plays the game's own title tune when it
+// has one, and the high score table its high score tune; with none, the
+// high score table leaves the music playing.
+func TestGameTunes(t *testing.T) {
+	title := &audio.Tune{Name: "own title", Parts: []audio.Part{{Notes: audio.Notes("C4:12")}}}
+	scores := &audio.Tune{Name: "own scores", Parts: []audio.Part{{Notes: audio.Notes("E4:12")}}}
+	h := newHarness(t, NewTitle())
+	h.ctx.Audio = audio.NewSynth(config.Chip4)
+	h.ctx.TitleTune, h.ctx.ScoresTune = title, scores
+	h.ticks(1)
+	if got := h.ctx.Audio.Tune(); got != title {
+		t.Errorf("title plays %v, want the game's own", got)
+	}
+	h = newHarness(t, NewHighScoreTable(config.Skills[0], -1))
+	h.ctx.Audio = audio.NewSynth(config.Chip4)
+	h.ctx.TitleTune, h.ctx.ScoresTune = title, scores
+	h.ticks(1)
+	if got := h.ctx.Audio.Tune(); got != scores {
+		t.Errorf("high score table plays %v, want the game's own", got)
+	}
+	h = newHarness(t, NewHighScoreTable(config.Skills[0], -1))
+	h.ctx.Audio = audio.NewSynth(config.Chip4)
+	h.ctx.Audio.PlayTune(TitleTune)
+	h.ticks(1)
+	if got := h.ctx.Audio.Tune(); got != TitleTune {
+		t.Errorf("with no high score tune the table plays %v, want the title tune still", got)
+	}
+}
+
+// TestTitleRunsTheDemo checks the title runs the game's demo behind it,
+// and that any key still goes to the main menu.
+func TestTitleRunsTheDemo(t *testing.T) {
+	demo := &stubPlay{}
+	h := newHarness(t, NewTitle())
+	h.ctx.NewDemo = func(*Context) Scene { return demo }
+	h.ticks(10)
+	if title := current[*Title](t, h); title.Demo() != demo || demo.updates == 0 {
+		t.Fatalf("demo %v, %d updates: want it running", title.Demo(), demo.updates)
+	}
+	h.press(ebiten.KeyEnter)
+	current[*MainMenu](t, h)
+}
