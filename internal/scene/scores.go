@@ -271,7 +271,7 @@ func (t *HighScoreTable) Draw(ctx *Context, dst *ebiten.Image) {
 	dst.Fill(gfx.RGBA(sc.Backdrop))
 	y := f.Large.LineHeight()
 	ui.TextCentred(dst, f.Large, "HIGH SCORES", y, sc.Title, sc.Shadow)
-	y += f.Large.LineHeight() + ui.LineGap + menuPad
+	y += f.Large.LineHeight() + ui.LineGap + menuPad(f)
 	skill := config.Skills[t.skill]
 	name := skill.Name
 	if len(config.Skills) > 1 {
