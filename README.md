@@ -14,6 +14,9 @@ begins.
 - **Art:** text-grid sprites in `assets/sprites/*.txt`, packed into sprite
   sheets by `go generate`, with a preview sheet for checking them by eye. An
   8×8 font and a 16×16 font made from it.
+- **Program icon:** drawn as a sprite like the rest, shown on the window and
+  linked into the Windows exe. The skeleton's is a placeholder for each game
+  to replace with its own.
 - **Scenes:** title, main menu, skill select, options, pause, tally, high
   score entry and table, with fades and screen shake.
 - **Input:** keyboard and gamepad mapped to actions, with key repeat for menus.

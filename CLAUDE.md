@@ -97,7 +97,9 @@ tracked; personal instructions go in CLAUDE.local.md, which is not.
 2. Code layout          the skeleton packages plus the game's own (e.g. world/, fx/)
 3. Technical approach   game logic, collision, events, levels as data, randomness
 4. Testing              unit tests for game logic, golden replays, manual checklists
-5. Milestones           M0…Mn: "- [ ]" tasks, then "Done when:"; each one playable
+5. Milestones           M0…Mn: "- [ ]" tasks, then "Done when:"; each one playable.
+                        The milestone before the first release includes the
+                        game's own program icon (§7)
 6. Risks                table: Risk | What we do about it
 7. Discuss later
 ```
@@ -218,6 +220,7 @@ libxxf86vm-dev libasound2-dev pkg-config`. Build them in WSL.
 
 ```
 cmd/<game>/        main.go: flags, saved files, window, run
+cmd/winicon/       writes the program icon as a .ico for the Windows exe
 internal/
   game/            ebiten.Game: scenes, window keys, scale modes, presentation
   scene/           scene manager, fades, shake, shared scenes
@@ -233,6 +236,7 @@ internal/
   spritegrid/      text-grid sprite parser and packer
   bitfont/         bitmap fonts without a GPU (game and tools)
   debug/           debug.Enabled (build tag: debug)
+  icon/            the program icon at every size, from assets/sprites/icon.txt
   <game logic>/    the game's own world, with no graphics or audio imports
 tools/spritegen/   sprites → PNG + JSON (+ preview)
 assets/            assets.go, sprites/, gen/, font/
@@ -257,6 +261,11 @@ assets/            assets.go, sprites/, gen/, font/
   stored as sprites.
 - The game only loads PNG and JSON, so a sprite drawn by hand can replace a
   generated one without code changes.
+- **Program icon:** `assets/sprites/icon.txt` holds the window's and the exe's
+  icon, drawn at 16 and 32 pixels. The skeleton's is a placeholder, marked as
+  such on its first line. Once the game is designed and built, draw the
+  game's own in its place and delete that line; a release fails while it is
+  still there.
 
 ## 8. Audio
 

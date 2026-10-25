@@ -13,6 +13,7 @@ import (
 	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
 	"github.com/comprofix/gameskeleton/internal/game"
+	"github.com/comprofix/gameskeleton/internal/icon"
 	"github.com/comprofix/gameskeleton/internal/score"
 )
 
@@ -34,6 +35,11 @@ func main() {
 	}
 
 	ebiten.SetWindowTitle(config.Title)
+	icons, err := icon.Images()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ebiten.SetWindowIcon(icons)
 	ebiten.SetWindowSize(saved.Settings.WindowW, saved.Settings.WindowH)
 	minW, minH := p.MinWindow()
 	ebiten.SetWindowSizeLimits(minW, minH, config.MaxWindowW, config.MaxWindowH)
