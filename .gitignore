@@ -1,6 +1,11 @@
-# Personal working documents (not tracked; CLAUDE.md is tracked)
+# Personal working documents (not tracked). CLAUDE.md is tracked: the
+# template's setup guide. Personal instructions go in CLAUDE.local.md.
+CLAUDE.local.md
+AGENTS.md
 DESIGN.md
 PLAN.md
+.mcp.json
+.worktreeinclude
 .claude/
 
 # Build output
