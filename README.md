@@ -19,7 +19,7 @@ begins.
   to replace with its own.
 - **Scenes:** title, main menu, skill select, options, pause, tally, high
   score entry and table, with fades and screen shake.
-- **Input:** keyboard and gamepad mapped to actions, with key repeat for menus.
+- **Input:** keyboard, gamepad and mouse mapped to actions, with key repeat for menus; menus work by pointer, click and wheel.
 - **Sound made in code:** a chip synth with pulse, triangle and noise waves and
   volume envelopes, tunes and effects as note tables, timed to the game tick.
 - **Saves:** settings and a top-10 high score table for each skill.

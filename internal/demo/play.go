@@ -201,7 +201,7 @@ func newEnded(p *Play, msg string) *Ended { return &Ended{play: p, msg: msg} }
 // Update implements scene.Scene.
 func (g *Ended) Update(ctx *scene.Context) error {
 	g.ticks++
-	if g.ticks >= gameOverTicks || (g.ticks > config.TPS/2 && ctx.Input.JustPressed(input.Confirm)) {
+	if g.ticks >= gameOverTicks || (g.ticks > config.TPS/2 && (ctx.Input.JustPressed(input.Confirm) || ctx.Input.Clicked())) {
 		ctx.Switch(tally(ctx, g.play.world))
 	}
 	return nil

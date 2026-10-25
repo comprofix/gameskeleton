@@ -8,8 +8,10 @@ import (
 
 	"github.com/comprofix/gameskeleton/internal/audio"
 	"github.com/comprofix/gameskeleton/internal/config"
+	"github.com/comprofix/gameskeleton/internal/gfx"
 	"github.com/comprofix/gameskeleton/internal/input"
 	"github.com/comprofix/gameskeleton/internal/score"
+	"github.com/comprofix/gameskeleton/internal/ui"
 )
 
 // harness runs scenes headless: Update only, never Draw.
@@ -330,4 +332,55 @@ func TestTitleRunsTheDemo(t *testing.T) {
 	}
 	h.press(ebiten.KeyEnter)
 	current[*MainMenu](t, h)
+}
+
+// click clicks the middle of item i of a menu screen's menu, lets go, and
+// waits out any fade.
+func (h *harness) click(i int, top func(gfx.Fonts) int) {
+	f := h.ctx.Fonts
+	y := top(f) + i*(f.Small.LineHeight()+ui.LineGap) + f.Small.LineHeight()/2
+	h.mouse(input.Click(config.Project.ScreenWidth/2, y))
+}
+
+// mouse plays a one-tick step, lets go, and waits out any fade.
+func (h *harness) mouse(st input.Step) {
+	h.in.Steps = append(h.in.Steps, st, input.Idle(1))
+	h.ticks(2)
+	h.ticks(2 * FadeTicks)
+}
+
+// rightClick clicks the right mouse button.
+func (h *harness) rightClick() {
+	h.mouse(input.Step{Mouse: []ebiten.MouseButton{ebiten.MouseButtonRight}, Ticks: 1})
+}
+
+// TestMenusByMouse: the shared scenes can be used by mouse alone.
+func TestMenusByMouse(t *testing.T) {
+	h := newHarness(t, NewTitle())
+	h.ctx.Fonts = gfx.SmoothFonts(config.Project.ScreenHeight) // the mouse needs the menus measured
+	h.click(0, menuTop)                                        // any button
+	current[*MainMenu](t, h)
+	h.click(1, menuTop)
+	opts := current[*Options](t, h)
+
+	// The Reduced motion line, clicked, toggles it.
+	for i, it := range opts.menu.Items {
+		if it.Label == "Reduced motion" {
+			h.click(i, menuTop)
+		}
+	}
+	if !h.ctx.Settings.ReducedMotion {
+		t.Error("Reduced motion was not turned on by a click")
+	}
+	h.rightClick() // back
+	current[*MainMenu](t, h)
+	h.click(0, menuTop) // Play
+	h.click(0, menuTop) // the first skill
+	play := current[*stubPlay](t, h)
+	h.rightClick() // pause
+	current[*Pause](t, h)
+	h.click(0, pauseMenuTop) // Resume
+	if current[*stubPlay](t, h) != play {
+		t.Error("Resume did not return to the game")
+	}
 }
