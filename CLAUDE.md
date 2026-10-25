@@ -122,9 +122,24 @@ tracked; personal instructions go in CLAUDE.local.md, which is not.
   discussion are not a go-ahead.
 - **Never commit or push** unless the user says so for that specific commit or
   push.
-- **One commit per milestone.** When a milestone's checks pass, report back
-  and wait. Once the user approves, commit it on its own as
-  `<milestone>: <summary>` (e.g. `K1: …` in the skeleton, `M3: …` in a game).
+- **One commit per change.** When a milestone's checks pass, report back and
+  wait. Once the user approves, commit each distinct change on its own (one
+  fix, feature or milestone per commit, never bundled).
+- **Commit messages follow Conventional Commits 1.0.0:**
+  `type(scope): description`, with an optional body and footers.
+  - Types: `feat` (something new for the player), `fix` (a bug fix), `docs`,
+    `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+  - The scope is optional and names the area or package, e.g. `feat(audio):`,
+    `fix(world):`.
+  - The description is short, lower case and imperative, with no full stop.
+  - An incompatible change adds `!` after the type or a `BREAKING CHANGE:`
+    footer.
+  - Milestone names (`K1`, `M3`) stay in PLAN.md and never appear in commit
+    messages.
+- **Versions follow SemVer**, worked out from the commits since the last tag:
+  any breaking change makes a major bump, any `feat` a minor bump, otherwise
+  any `fix` or `perf` a patch bump. A release is an annotated tag `vX.Y.Z`
+  with the message `<Title> vX.Y.Z`.
 - Commits have no `Co-Authored-By: Claude` or `Claude-Session:` trailers. The
   user is the only author.
 - **No CI/CD.** Do not add GitHub workflows unless the user explicitly asks.
