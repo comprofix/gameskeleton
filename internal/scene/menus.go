@@ -196,6 +196,8 @@ func ScaleModeName(m config.ScaleMode) string {
 	switch m {
 	case config.ScaleCRT:
 		return "CRT 4:3"
+	case config.ScaleSmooth:
+		return "Smooth"
 	default:
 		return "Whole pixels"
 	}
