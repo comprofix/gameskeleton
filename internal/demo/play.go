@@ -122,7 +122,7 @@ func (p *Play) Draw(ctx *scene.Context, dst *ebiten.Image) {
 	dst.Fill(gfx.RGBA(sc.Backdrop))
 
 	// The score line: score, time left, hearts.
-	ty := (HUD - f.Small.Size()) / 2
+	ty := (HUD - f.Small.LineHeight()) / 2
 	f.Small.DrawShadowed(dst, fmt.Sprintf("SCORE %06d", ctx.Session.Score), Margin, ty, sc.Text, sc.Shadow)
 	secs := (w.TicksLeft + config.TPS - 1) / config.TPS
 	timeC := sc.Text
@@ -224,5 +224,5 @@ func (g *Ended) Draw(ctx *scene.Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
 	g.play.Draw(ctx, dst)
 	scene.Dim(dst, sc.Shadow, 0.5)
-	ui.TextCentred(dst, f.Large, g.msg, (config.Project.ScreenHeight-f.Large.Size())/2, sc.Title, sc.Shadow)
+	ui.TextCentred(dst, f.Large, g.msg, (config.Project.ScreenHeight-f.Large.LineHeight())/2, sc.Title, sc.Shadow)
 }

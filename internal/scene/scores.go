@@ -95,7 +95,7 @@ func (t *Tally) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
 	h := config.Project.ScreenHeight
 	dst.Fill(gfx.RGBA(sc.Backdrop))
-	y := f.Large.Size()
+	y := f.Large.LineHeight()
 	ui.TextCentred(dst, f.Large, t.heading, y, sc.Title, sc.Shadow)
 
 	// One row per line, label on the left and points on the right, with
@@ -108,7 +108,7 @@ func (t *Tally) Draw(ctx *Context, dst *ebiten.Image) {
 	width = max(width, len("Total")) + 2 + pointsCols
 	row := func(i int, label string, points int, c int) {
 		s := label + strings.Repeat(" ", width-len(label)-pointsCols) + fmt.Sprintf("%*d", pointsCols, points)
-		ry := y + 2*f.Large.Size() + i*(f.Small.Size()+ui.LineGap)
+		ry := y + 2*f.Large.LineHeight() + i*(f.Small.LineHeight()+ui.LineGap)
 		f.Small.DrawShadowed(dst, s, f.Small.CentreX(s), ry, c, sc.Shadow)
 	}
 	for i, l := range t.lines {
@@ -123,7 +123,7 @@ func (t *Tally) Draw(ctx *Context, dst *ebiten.Image) {
 	}
 	row(len(t.lines)+1, "Total", t.Total(), sc.Title)
 	if t.Done() && ui.Blink(t.ticks, BlinkTicks) {
-		ui.TextCentred(dst, f.Small, "PRESS ENTER", h-3*f.Small.Size(), sc.Text, sc.Shadow)
+		ui.TextCentred(dst, f.Small, "PRESS ENTER", h-3*f.Small.LineHeight(), sc.Text, sc.Shadow)
 	}
 }
 
@@ -198,30 +198,30 @@ func (e *HighScoreEntry) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
 	h := config.Project.ScreenHeight
 	dst.Fill(gfx.RGBA(sc.Backdrop))
-	y := f.Large.Size()
+	y := f.Large.LineHeight()
 	ui.TextCentred(dst, f.Large, "NEW HIGH SCORE", y, sc.Title, sc.Shadow)
-	y += 2 * f.Large.Size()
+	y += 2 * f.Large.LineHeight()
 	ui.TextCentred(dst, f.Small, fmt.Sprintf("%s  %d", e.skill.Name, e.points), y, sc.Text, sc.Shadow)
-	y += 3 * f.Small.Size()
+	y += 3 * f.Small.LineHeight()
 	ui.TextCentred(dst, f.Small, "Enter your initials", y, sc.Text, sc.Shadow)
-	y += 2 * f.Small.Size()
+	y += 2 * f.Small.LineHeight()
 
 	// The letters in the large font, spaced a cell apart, with the current
 	// one highlighted and underlined.
-	cell := 2 * f.Large.Size()
-	x0 := (config.Project.ScreenWidth - (config.InitialsLen*cell - f.Large.Size())) / 2
+	cell := 2 * f.Large.CellWidth()
+	x0 := (config.Project.ScreenWidth - (config.InitialsLen*cell - f.Large.CellWidth())) / 2
 	for i, l := range e.letters {
 		c := sc.Text
 		x := x0 + i*cell
 		if i == e.slot {
 			c = sc.Highlight
 			if ui.Blink(e.ticks, BlinkTicks) {
-				f.Large.DrawShadowed(dst, "_", x, y+f.Large.Size()/4, c, sc.Shadow)
+				f.Large.DrawShadowed(dst, "_", x, y+f.Large.LineHeight()/4, c, sc.Shadow)
 			}
 		}
 		f.Large.DrawShadowed(dst, string(score.Letters[l]), x, y, c, sc.Shadow)
 	}
-	ui.TextCentred(dst, f.Small, "Up/Down: letter   Enter: next", h-2*f.Small.Size(), sc.Dim, sc.Shadow)
+	ui.TextCentred(dst, f.Small, "Up/Down: letter   Enter: next", h-2*f.Small.LineHeight(), sc.Dim, sc.Shadow)
 }
 
 // HighScoreTable shows one skill's table. Left and Right show the other
@@ -269,16 +269,16 @@ func (t *HighScoreTable) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
 	h := config.Project.ScreenHeight
 	dst.Fill(gfx.RGBA(sc.Backdrop))
-	y := f.Large.Size()
+	y := f.Large.LineHeight()
 	ui.TextCentred(dst, f.Large, "HIGH SCORES", y, sc.Title, sc.Shadow)
-	y += f.Large.Size() + ui.LineGap + menuPad
+	y += f.Large.LineHeight() + ui.LineGap + menuPad
 	skill := config.Skills[t.skill]
 	name := skill.Name
 	if len(config.Skills) > 1 {
 		name = "< " + name + " >"
 	}
 	ui.TextCentred(dst, f.Small, name, y, sc.Highlight, sc.Shadow)
-	y += f.Small.Size() + 2*ui.LineGap
+	y += f.Small.LineHeight() + 2*ui.LineGap
 
 	es := ctx.Scores.Table(skill.ID)
 	for i := range config.TableSize {
@@ -295,7 +295,7 @@ func (t *HighScoreTable) Draw(ctx *Context, dst *ebiten.Image) {
 			}
 		}
 		f.Small.DrawShadowed(dst, s, f.Small.CentreX(s), y, c, sc.Shadow)
-		y += f.Small.Size() + ui.LineGap
+		y += f.Small.LineHeight() + ui.LineGap
 	}
-	ui.TextCentred(dst, f.Small, "Left/Right: skill   Enter: menu", h-2*f.Small.Size(), sc.Dim, sc.Shadow)
+	ui.TextCentred(dst, f.Small, "Left/Right: skill   Enter: menu", h-2*f.Small.LineHeight(), sc.Dim, sc.Shadow)
 }

@@ -53,14 +53,14 @@ func (t *Title) Draw(ctx *Context, dst *ebiten.Image) {
 	h := config.Project.ScreenHeight
 	// Without a demo, the name a third of the way down and the prompt two
 	// thirds; over a demo, both together on a panel, so they read over it.
-	y, py := h/3-f.Large.Size()/2, h*2/3
+	y, py := h/3-f.Large.LineHeight()/2, h*2/3
 	if t.demo != nil {
 		t.demo.Draw(ctx, dst)
 		Dim(dst, sc.Shadow, TitleDim)
-		pad := 2 * f.Small.Size()
-		body := f.Large.Size() + pad + f.Small.Size()
+		pad := 2 * f.Small.LineHeight()
+		body := f.Large.LineHeight() + pad + f.Small.LineHeight()
 		y = (h - body) / 2
-		py = y + f.Large.Size() + pad
+		py = y + f.Large.LineHeight() + pad
 		ui.Panel(dst, ui.PanelAround(f.Large.Width(config.Title)+2*pad, body, y, pad), sc.Panel, sc.Border)
 	} else {
 		dst.Fill(gfx.RGBA(sc.Backdrop))
@@ -70,5 +70,5 @@ func (t *Title) Draw(ctx *Context, dst *ebiten.Image) {
 	if ui.Blink(t.shown, BlinkTicks) {
 		ui.TextCentred(dst, f.Small, "PRESS ANY KEY", py, sc.Text, sc.Shadow)
 	}
-	ui.TextCentred(dst, f.Small, "F11 fullscreen   F10 quit", h-2*f.Small.Size(), sc.Dim, sc.Shadow)
+	ui.TextCentred(dst, f.Small, "F11 fullscreen   F10 quit", h-2*f.Small.LineHeight(), sc.Dim, sc.Shadow)
 }
