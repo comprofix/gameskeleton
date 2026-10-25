@@ -1,25 +1,33 @@
 # Game Skeleton
 
-A starter template for retro and arcade games written in Go with
-[Ebitengine](https://ebitengine.org/). New games are made from it with
-GitHub's **Use this template** button. It comes with a tiny demo game,
-**Dot Dash**, which shows every part working and is removed when a real game
-begins.
+A starter template for 2D games written in Go with
+[Ebitengine](https://ebitengine.org/), in one of two art styles: **pixel
+art**, for retro and arcade games, or **smooth**, art drawn in code at
+1280×720, for card, board and table games. New games are made from it with
+GitHub's **Use this template** button. It comes with a tiny pixel-art demo
+game, **Dot Dash**, which shows every part working and is removed when a
+real game begins.
 
 ## What you get
 
-- **Display:** a fixed internal resolution scaled up by whole numbers with
-  letterboxing, fullscreen, and an optional CRT 4:3 mode. One palette per
-  game, with colours named in code (`resurrect64.Gold`).
-- **Art:** text-grid sprites in `assets/sprites/*.txt`, packed into sprite
-  sheets by `go generate`, with a preview sheet for checking them by eye. An
-  8×8 font and a 16×16 font made from it.
+- **Display:** a fixed internal resolution, letterboxed, with fullscreen.
+  Pixel art is scaled up by whole numbers, with an optional CRT 4:3 mode;
+  smooth art is scaled smoothly to any size. One palette per game, with
+  colours named in code (`resurrect64.Gold`).
+- **Pixel art:** text-grid sprites in `assets/sprites/*.txt`, packed into
+  sprite sheets by `go generate`, with a preview sheet for checking them by
+  eye. An 8×8 font and a 16×16 font made from it.
+- **Smooth art:** shapes drawn in code in palette colours (rounded
+  rectangles, circles, lines, polygons, panels and buttons with hover and
+  pressed looks), and Go Mono Bold for text. Sprites work here too.
 - **Program icon:** drawn as a sprite like the rest, shown on the window and
   linked into the Windows exe. The skeleton's is a placeholder for each game
   to replace with its own.
 - **Scenes:** title, main menu, skill select, options, pause, tally, high
   score entry and table, with fades and screen shake.
-- **Input:** keyboard, gamepad and mouse mapped to actions, with key repeat for menus; menus work by pointer, click and wheel.
+- **Input:** keyboard, gamepad and mouse mapped to actions, with key repeat
+  for menus. Menus and the shared scenes work by mouse too: pointing moves
+  the bar, a click chooses, the wheel scrolls.
 - **Sound made in code:** a chip synth with pulse, triangle and noise waves and
   volume envelopes, tunes and effects as note tables, timed to the game tick.
 - **Saves:** settings and a top-10 high score table for each skill.
@@ -41,12 +49,13 @@ begins.
 A game picks one preset in `internal/config/project.go`, along with its title
 and tick rate. Nothing else in the code hard-codes a screen size or palette.
 
-| | Modern (default) | Classic PC |
-|---|---|---|
-| Resolution | 640×360 (16:9) | 320×200 |
-| Palette | Resurrect 64 (64 colours) | Sweetie 16 (16 colours) |
-| Scaling | whole-number | whole-number, or CRT 4:3 |
-| Sound | `Chip4`: 4 channels (2 pulse, triangle, noise) | `Speaker`: 1 square-wave voice |
+| | Modern (pixel, default) | Classic PC (pixel) | Smooth |
+|---|---|---|---|
+| Resolution | 640×360 (16:9) | 320×200 | 1280×720 (16:9) |
+| Palette | Resurrect 64 (64 colours) | Sweetie 16 (16 colours) | Resurrect 64 |
+| Scaling | whole-number | whole-number, or CRT 4:3 | smooth, any size |
+| Fonts | 8×8 and 16×16 bitmap | 8×8 and 16×16 bitmap | Go Mono Bold, 20 and 40 |
+| Sound | `Chip4`: 4 channels (2 pulse, triangle, noise) | `Speaker`: 1 square-wave voice | `Chip4` |
 
 A game can also add its own `Preset` in `internal/config/preset.go`. The game
 runs at 60 ticks per second, and all game logic counts in ticks.
@@ -59,7 +68,7 @@ runs at 60 ticks per second, and all game logic counts in ticks.
    it.
 2. Start Claude Code in the folder. With no `DESIGN.md` or `PLAN.md`, it
    follows the **New game setup** section of `CLAUDE.md`: it asks about the
-   game, including whether to set up CI/CD, then (once you agree) runs
+   game, including pixel art or smooth and whether to set up CI/CD, then (once you agree) runs
    `tools/newgame`, sets the preset, sets up CI/CD if wanted, writes
    `DESIGN.md` and `PLAN.md`, and updates `CLAUDE.md`. It stops there, before
    any game code. Anything you want Claude to know that is yours alone goes
@@ -71,13 +80,16 @@ runs at 60 ticks per second, and all game logic counts in ticks.
 2. Run:
 
    ```sh
-   go run ./tools/newgame -module github.com/comprofix/<game> -name <game> -title "<Game Title>"
+   go run ./tools/newgame -module github.com/comprofix/<game> -name <game> -title "<Game Title>" -style pixel
    ```
 
    It changes the module path and every import, renames `cmd/gameskeleton` to
-   `cmd/<game>`, sets the title, removes the demo (add `-keep-demo` to keep
-   it), writes a new README, removes itself, and builds and tests the result.
-3. Set the preset in `internal/config/project.go`.
+   `cmd/<game>`, sets the title and the preset for the style (`-style pixel`
+   gives Modern, `-style smooth` gives Smooth), removes the demo (add
+   `-keep-demo` to keep it, for pixel art only), writes a new README, removes
+   itself, and builds and tests the result.
+3. For pixel art with another preset, set it in
+   `internal/config/project.go`.
 4. Wire in your play scene, sounds and sprite sheets through `game.Content`,
    and, if you like, a demo to run behind the title (`NewDemo`) and your own
    title and high score tunes (`TitleTune`, `ScoresTune`),
@@ -107,20 +119,23 @@ Linux builds need cgo, so build them on Linux or in WSL.
 
 ## Controls
 
-| Action | Keyboard | Gamepad (standard layout) |
-|---|---|---|
-| Move | Arrow keys, WASD | D-pad, left stick |
-| Confirm | Enter, Space | A |
-| Back | Esc, Backspace | B |
-| Pause | Esc, P | Start |
-| Restart | Ctrl+R | — |
-| Main menu | Ctrl+M | Back/Select |
-| Sound on/off | Ctrl+S | — |
-| Scale mode | F9 | — |
-| Quit | F10 | — |
-| Fullscreen | F11, Alt+Enter | — |
+| Action | Keyboard | Gamepad (standard layout) | Mouse |
+|---|---|---|---|
+| Move | Arrow keys, WASD | D-pad, left stick | in menus: point, or the wheel |
+| Confirm | Enter, Space | A | click |
+| Back | Esc, Backspace | B | right click |
+| Pause | Esc, P | Start | right click |
+| Restart | Ctrl+R | — | — |
+| Main menu | Ctrl+M | Back/Select | — |
+| Sound on/off | Ctrl+S | — | — |
+| Scale mode | F9 | — | — |
+| Quit | F10 | — | — |
+| Fullscreen | F11, Alt+Enter | — | — |
 
 F9, F10, F11 and Alt+Enter are kept for the window and never reach the game.
+In menus a click on a slider's bar sets it, and dragging moves it. When
+entering initials the wheel turns the letter and a click moves on, and the
+wheel turns the high score tables.
 
 ## Saved files
 

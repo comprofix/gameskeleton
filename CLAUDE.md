@@ -7,10 +7,13 @@ reads and `.gitignore` keeps out of git.
 
 ## 1. Project
 
-**Game Skeleton:** a starter repository for Go and Ebitengine retro and arcade
-games. New games are created from it (it is a GitHub template repository), so
-it must stay **game-agnostic**. The only game content is the small demo
-("Dot Dash").
+**Game Skeleton:** a starter repository for Go and Ebitengine 2D games, in
+one of two art styles: **pixel art** (sprites, whole-pixel scaling, bitmap
+fonts), for retro and arcade games, or **smooth** (1280×720, shapes drawn in
+code, an outline font, smooth scaling), which suits card, board and table
+games. New games are created from it (it is a GitHub template repository),
+so it must stay **game-agnostic**. The only game content is the small demo
+("Dot Dash"), which is pixel art.
 
 - Remote: `git@github.com:comprofix/gameskeleton.git`
 - `DESIGN.md` and `PLAN.md` are local working documents, **not tracked in git**.
@@ -35,25 +38,33 @@ either is missing:
    - The name, a one-line summary, and the module path
      (`github.com/comprofix/<game>`).
    - A brand-new game, or a remake of an existing one (§9 applies to remakes).
-   - The preset:
+   - "Pixel art or smooth?" (§7):
+     - **Pixel art:** sprites on a low-resolution screen scaled by whole
+       pixels, with bitmap fonts. For retro and arcade games.
+     - **Smooth:** the **Smooth** preset, 1280×720, Resurrect 64, `Chip4`,
+       scaled smoothly to any window; art drawn in code from shapes, text in
+       Go Mono Bold. For card, board, puzzle and table games.
+   - For pixel art, the preset:
      - **Modern:** 640×360, Resurrect 64, `Chip4`.
      - **Classic PC:** 320×200, Sweetie 16, `Speaker`, optional CRT 4:3.
      - Or custom settings.
    - Theme, hero, controls, main rules, scoring, difficulty and any special
      mechanics.
    - What is not included in v1.
-   - Whether to keep the Dot Dash demo for reference (it is removed by
-     default).
+   - For pixel art, whether to keep the Dot Dash demo for reference (it is
+     removed by default). A smooth game never keeps it.
    - "Do you want to set up CI/CD as part of this project?" That is, release
      builds made by GitHub Actions when a version tag is pushed (§5). Nothing
      runs until the first tag, so it is safe to set up on day one.
 3. **Summarise the answers and wait for the go-ahead.** Then:
-   1. Run `go run ./tools/newgame -module … -name … -title "…"`. Add
-      `-keep-demo` only if asked. It renames the module, the command folder
-      and the commands in §5, sets the title, writes a new README and removes
-      itself.
-   2. Set the preset in `internal/config/project.go`: `Modern`, `Classic`,
-      or a custom `Preset` added to `internal/config/preset.go`.
+   1. Run `go run ./tools/newgame -module … -name … -title "…" -style …`,
+      with `-style pixel` or `-style smooth`. Add `-keep-demo` only if asked
+      (pixel art only). It renames the module, the command folder and the
+      commands in §5, sets the title and the preset for the style (`Modern`
+      or `Smooth`), writes a new README and removes itself.
+   2. For pixel art with another preset, set it in
+      `internal/config/project.go`: `Classic`, or a custom `Preset` added to
+      `internal/config/preset.go`.
    3. If CI/CD was wanted, set it up as in §5.
    4. Write `DESIGN.md` and `PLAN.md` using the outlines below. Mark anything
       not yet decided as **(open)** in the decisions table, and record the
@@ -84,7 +95,7 @@ tracked; personal instructions go in CLAUDE.local.md, which is not.
 1. Pillars              3–5 guiding principles
 2. Theme and setting    world, hero, name
 3. Look and sound       resolution, palette, art style, screen layout mock-up, audio
-4. Controls             key/gamepad table; reserved keys
+4. Controls             key, gamepad and mouse table; reserved keys
 5. Rules                movement, hazards, goals, timer, lives, scoring table, difficulty and skills
 6. Special mechanics    each with a short description
 7. Screens and flow     scene diagram; title, menus, game over, high scores
@@ -258,6 +269,12 @@ Never regenerate the whole CHANGELOG.md: the tidied wording would be lost.
   DESIGN.md is its own; it is explained by its package docs instead.
 - Alt+Enter, F9, F10 and F11 are reserved for the window and never trigger
   game actions.
+- **The mouse** works in both styles. `Input.Pointer` gives it in screen
+  pixels, through the letterbox in every scale mode; `Clicked`, `MouseHeld`
+  and `Wheel` give the buttons and wheel, and a right click is Back and
+  Pause, as Esc is. A `ui.Menu` works by mouse once placed (`Place` or
+  `PlaceCentred`, before its `Update`, with what its `Draw` is given).
+  Scripted input drives the mouse too (`input.MoveTo`, `input.Click`).
 - The game plugs into the shared scenes through `game.Content` (its play
   scene, sounds and sprite sheets; optionally a demo behind the title and
   its own title and high score tunes), set in one file such as
@@ -279,14 +296,16 @@ internal/
   game/            ebiten.Game: scenes, window keys, scale modes, presentation
   scene/           scene manager, fades, shake, shared scenes
   scene/scenetest/ headless test harness, golden files
-  ui/              list menu, panel, text helpers
+  ui/              list menu (keys and mouse), panel, text helpers
+  shapes/          smooth shapes, panels and buttons in palette colours
   config/          project.go, settings, tuning values, skills, levels
   session/         one game in progress
   score/           high score tables
-  gfx/             palette, schemes, sheets, animation, fonts, scaler
+  gfx/             palette, schemes, sheets, animation, fonts (bitmap and
+                   Go Mono Bold), scaler
   gfx/palettes/    ready-made palettes
   audio/           synth, tunes, sound effects, scheduling, output
-  input/           actions, keyboard, gamepad, scripted input
+  input/           actions, keyboard, gamepad, mouse, scripted input
   spritegrid/      text-grid sprite parser and packer
   bitfont/         bitmap fonts without a GPU (game and tools)
   debug/           debug.Enabled (build tag: debug)
@@ -297,6 +316,12 @@ assets/            assets.go, sprites/, gen/, font/
 ```
 
 ## 7. Art
+
+The game's art style, chosen at setup (§2), is pixel art or smooth.
+Either way colours come from the palette by name, and the program icon is a
+sprite (below).
+
+### Pixel art
 
 - Claude makes all the art as **text-grid sprites** in `assets/sprites/*.txt`
   (format in the `spritegrid` package docs):
@@ -315,11 +340,29 @@ assets/            assets.go, sprites/, gen/, font/
   stored as sprites.
 - The game only loads PNG and JSON, so a sprite drawn by hand can replace a
   generated one without code changes.
-- **Program icon:** `assets/sprites/icon.txt` holds the window's and the exe's
-  icon, drawn at 16 and 32 pixels. The skeleton's is a placeholder, and
-  `icon.Placeholder` says so. Once the game is designed and built, draw the
-  game's own in its place and set `icon.Placeholder` to false. Until then
-  `cmd/winicon` refuses to write the exe's icon, so a release fails.
+
+### Smooth
+
+- Claude draws the art in code with `internal/shapes`: rectangles, rounded
+  rectangles, circles, lines, polygons and arcs, anti-aliased, and panels
+  and buttons styled from the colour scheme (`PanelFor`, `ButtonFor`).
+  Pictures that are needed often (a card, a chip) are drawn by one function
+  each, in the game's own package.
+- The screen is 1280×720 and is scaled smoothly to the window, so lay
+  things out by the screen and font sizes, not by whole pixels.
+- Text is Go Mono Bold (`gfx.SmoothFonts`), monospaced like the bitmap
+  fonts, so menus line up in character cells.
+- Sprites still work, for anything better drawn as an image.
+- Check new art by eye from a screenshot before using it. Preview programs
+  go in the scratchpad, never in the repo.
+
+### Program icon
+
+`assets/sprites/icon.txt` holds the window's and the exe's icon, drawn at
+16 and 32 pixels, in both styles. The skeleton's is a placeholder, and
+`icon.Placeholder` says so. Once the game is designed and built, draw the
+game's own in its place and set `icon.Placeholder` to false. Until then
+`cmd/winicon` refuses to write the exe's icon, so a release fails.
 
 ## 8. Audio
 
@@ -363,10 +406,11 @@ assets/            assets.go, sprites/, gen/, font/
 
 Removed during new game setup.
 
-- **Stay game-agnostic.** Only add what a typical retro arcade game needs.
-  Anything else goes in PLAN.md "Discuss later".
-- **Both presets must work:** Modern and Classic PC. Test both whenever the
-  scaler, palettes or audio change.
+- **Stay game-agnostic.** Only add what a typical 2D game needs, pixel or
+  smooth. Anything else goes in PLAN.md "Discuss later".
+- **All three presets must work:** Modern, Classic PC and Smooth. Test them
+  all whenever the scaler, palettes, fonts, input or audio change, and the
+  shared scenes by mouse as well as keys.
 - **Keep the demo separate.** Demo code lives only in `internal/demo` and
   `assets/sprites/demo.txt`. `tools/newgame` must be able to remove it
   cleanly.
