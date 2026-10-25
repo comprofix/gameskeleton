@@ -33,7 +33,7 @@ import (
 
 // SkeletonVersion is the skeleton release this copy is. Keep it in step with
 // the release tag.
-const SkeletonVersion = "0.3.0"
+const SkeletonVersion = "0.4.0"
 
 const (
 	oldModule = "github.com/comprofix/gameskeleton"
