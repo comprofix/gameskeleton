@@ -78,16 +78,20 @@ func TestNewGame(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds and tests whole games")
 	}
-	for _, keep := range []bool{false, true} {
-		name := "without the demo"
-		if keep {
-			name = "with the demo"
-		}
-		t.Run(name, func(t *testing.T) {
+	for _, c := range []struct {
+		name, style, preset string
+		keep                bool
+	}{
+		{"pixel without the demo", "pixel", "Modern", false},
+		{"pixel with the demo", "pixel", "Modern", true},
+		{"smooth", "smooth", "Smooth", false},
+	} {
+		keep := c.keep
+		t.Run(c.name, func(t *testing.T) {
 			dir := t.TempDir()
 			copySkeleton(t, dir)
 			var log bytes.Buffer
-			o := options{dir: dir, module: "example.com/me/rocket-rumble", name: "rocket-rumble", title: `Rocket "RR" Rumble`, keepDemo: keep, check: true}
+			o := options{dir: dir, module: "example.com/me/rocket-rumble", name: "rocket-rumble", title: `Rocket "RR" Rumble`, style: c.style, keepDemo: keep, check: true}
 			if err := run(o, &log); err != nil {
 				t.Fatalf("%v\n%s", err, log.String())
 			}
@@ -115,6 +119,9 @@ func TestNewGame(t *testing.T) {
 			if !strings.Contains(string(project), `const Title = "Rocket \"RR\" Rumble"`) {
 				t.Error("the title was not set in project.go")
 			}
+			if !strings.Contains(string(project), "\nvar Project = "+c.preset+"\n") {
+				t.Errorf("the preset was not set to %s in project.go", c.preset)
+			}
 			readme, _ := os.ReadFile(filepath.Join(dir, "README.md"))
 			if !strings.Contains(string(readme), "Created from [gameskeleton](https://github.com/comprofix/gameskeleton) v"+SkeletonVersion) {
 				t.Errorf("README does not say where it came from:\n%s", readme)
@@ -135,13 +142,15 @@ func TestNewGame(t *testing.T) {
 }
 
 func TestRefuses(t *testing.T) {
-	good := options{module: "example.com/me/game", name: "game", title: "Game"}
+	good := options{module: "example.com/me/game", name: "game", title: "Game", style: "pixel"}
 	for name, o := range map[string]options{
 		"no module":     {name: "game", title: "Game"},
 		"same module":   {module: oldModule, name: "game", title: "Game"},
 		"bad name":      {module: good.module, name: "My Game", title: "Game"},
 		"same name":     {module: good.module, name: oldName, title: "Game"},
-		"no title":      {module: good.module, name: "game", title: "  "},
+		"no title":      {module: good.module, name: "game", title: "  ", style: "pixel"},
+		"bad style":     {module: good.module, name: "game", title: "Game", style: "vector"},
+		"smooth demo":   {module: good.module, name: "game", title: "Game", style: "smooth", keepDemo: true},
 		"no skeleton":   good,
 		"design exists": good,
 	} {
