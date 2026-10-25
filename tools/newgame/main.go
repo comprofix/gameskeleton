@@ -213,7 +213,10 @@ go build -o bin/ ./cmd/%[3]s
 ## Personal documents
 
 `+"`DESIGN.md` and `PLAN.md`"+` are personal working documents. `+"`.gitignore`"+` keeps
-them out of git, so back them up somewhere else. `+"`CLAUDE.md`"+` is tracked.
+them out of git, so back them up somewhere else. `+"`CLAUDE.md`"+` is tracked, so
+anyone working on the game with Claude Code gets the same guidance; put
+personal instructions in `+"`CLAUDE.local.md`"+`, which Claude Code also reads and
+`+"`.gitignore`"+` keeps out of git.
 
 ## License
 

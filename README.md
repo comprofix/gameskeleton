@@ -24,7 +24,8 @@ begins.
   scripted input, a scene harness and golden replay tests. A debug build shows
   a timing overlay and collision boxes.
 - **Claude Code setup:** `CLAUDE.md` walks Claude through starting a new game
-  and holds the project's rules.
+  and holds the project's rules. It stays tracked in every game made from the
+  skeleton; personal instructions go in `CLAUDE.local.md`, which is not.
 
 ## Requirements
 
@@ -57,7 +58,8 @@ runs at 60 ticks per second, and all game logic counts in ticks.
    follows the **New game setup** section of `CLAUDE.md`: it asks about the
    game, then (once you agree) runs `tools/newgame`, sets the preset, writes
    `DESIGN.md` and `PLAN.md`, and updates `CLAUDE.md`. It stops there, before
-   any game code.
+   any game code. Anything you want Claude to know that is yours alone goes
+   in `CLAUDE.local.md`.
 
 ### By hand
 
@@ -78,7 +80,8 @@ runs at 60 ticks per second, and all game logic counts in ticks.
    in a file such as `internal/game/<game>.go`. Until then, Play is greyed out
    in the menu.
 5. In `CLAUDE.md`, describe your game in §1, replace §2 with the short
-   "Working documents" section it gives, and delete §11.
+   "Working documents" section it gives, and delete §11. Keep it tracked; put
+   personal instructions in `CLAUDE.local.md`.
 
 ## Commands
 
@@ -145,7 +148,10 @@ Existing games are not updated automatically.
 ## Personal documents
 
 `DESIGN.md` and `PLAN.md` are personal working documents. `.gitignore` keeps
-them out of git, so back them up somewhere else. `CLAUDE.md` is tracked.
+them out of git, so back them up somewhere else. `CLAUDE.md` is tracked, so
+anyone working on the game with Claude Code gets the same guidance; put
+personal instructions in `CLAUDE.local.md`, which Claude Code also reads and
+`.gitignore` keeps out of git.
 
 ## License
 

@@ -1,7 +1,9 @@
 # CLAUDE.md
 
 Guidance for Claude Code when working in this repo. This file is tracked in git
-and comes with every game made from the skeleton.
+and comes with every game made from the skeleton. Personal instructions that
+should not be shared go in `CLAUDE.local.md` beside it, which Claude Code also
+reads and `.gitignore` keeps out of git.
 
 ## 1. Project
 
@@ -64,7 +66,8 @@ either is missing:
 
 DESIGN.md and PLAN.md are local and not tracked in git. If either is missing
 at the start of a session, ask the user for their copies before doing
-anything else. Don't write new ones unless the user asks.
+anything else. Don't write new ones unless the user asks. This file is
+tracked; personal instructions go in CLAUDE.local.md, which is not.
 ```
 
 ### DESIGN.md outline
@@ -125,8 +128,8 @@ anything else. Don't write new ones unless the user asks.
 - Commits have no `Co-Authored-By: Claude` or `Claude-Session:` trailers. The
   user is the only author.
 - **No CI/CD.** Do not add GitHub workflows unless the user explicitly asks.
-- **Do not track** DESIGN.md, PLAN.md or `.claude/` in git, and do not remove
-  them from `.gitignore`.
+- **Do not track** DESIGN.md, PLAN.md, CLAUDE.local.md or `.claude/` in git,
+  and do not remove them from `.gitignore`.
 - Report results truthfully: if tests fail, show the output; if a step was
   skipped, say so.
 
