@@ -44,6 +44,9 @@ either is missing:
    - What is not included in v1.
    - Whether to keep the Dot Dash demo for reference (it is removed by
      default).
+   - "Do you want to set up CI/CD as part of this project?" That is, release
+     builds made by GitHub Actions when a version tag is pushed (§5). Nothing
+     runs until the first tag, so it is safe to set up on day one.
 3. **Summarise the answers and wait for the go-ahead.** Then:
    1. Run `go run ./tools/newgame -module … -name … -title "…"`. Add
       `-keep-demo` only if asked. It renames the module, the command folder
@@ -51,11 +54,13 @@ either is missing:
       itself.
    2. Set the preset in `internal/config/project.go`: `Modern`, `Classic`,
       or a custom `Preset` added to `internal/config/preset.go`.
-   3. Write `DESIGN.md` and `PLAN.md` using the outlines below. Mark anything
-      not yet decided as **(open)** in the decisions table.
-   4. Change §1 of this file to describe the game, including its fixed
+   3. If CI/CD was wanted, set it up as in §5.
+   4. Write `DESIGN.md` and `PLAN.md` using the outlines below. Mark anything
+      not yet decided as **(open)** in the decisions table, and record the
+      CI/CD answer there either way.
+   5. Change §1 of this file to describe the game, including its fixed
       decisions. Replace this §2 with the short section below. Remove §11.
-   5. Run `go vet ./...` and `go test ./...`.
+   6. Run `go vet ./...` and `go test ./...`.
 4. **Hand back:** show the documents, list the open decisions, and stop. Do not
    write game code or commit until the user says so.
 
@@ -144,7 +149,9 @@ tracked; personal instructions go in CLAUDE.local.md, which is not.
   with the message `<Title> vX.Y.Z`.
 - Commits have no `Co-Authored-By: Claude` or `Claude-Session:` trailers. The
   user is the only author.
-- **No CI/CD.** Do not add GitHub workflows unless the user explicitly asks.
+- **CI/CD** is set up only as the user chose at setup (§2), or later when
+  they ask, and then only as in §5. Do not add or change other GitHub
+  workflows unless the user explicitly asks.
 - **Do not track** DESIGN.md, PLAN.md, CLAUDE.local.md or `.claude/` in git,
   and do not remove them from `.gitignore`.
 - Report results truthfully: if tests fail, show the output; if a step was
@@ -172,6 +179,52 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/gameskeleton.exe ./cmd/g
 Linux builds need cgo and the X11/GL/ALSA development packages:
 `libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev
 libxxf86vm-dev libasound2-dev pkg-config`. Build them in WSL.
+
+### CI/CD and releases
+
+`tools/release/` holds the templates (its README says what each does). A tag
+`vX.Y.Z` pushed to GitHub runs vet and tests on Ubuntu 22.04 and Windows,
+builds a Windows zip and a Linux tarball on Ubuntu, and publishes a GitHub
+release with checksums and that version's CHANGELOG.md section as its notes.
+There is no workflow on every push.
+
+**Setting it up**, each step its own commit once the user agrees:
+
+1. Copy `tools/release/release.yml` to `.github/workflows/`, and
+   `tools/release/cliff.toml` and `tools/release/CHANGELOG.md` to the root;
+   then delete `tools/release/`.
+2. Add a Download section to the README, after the game's description:
+
+   ```
+   ## Download
+
+   Builds for Windows and Linux (64-bit) are on the
+   [Releases](https://<repo>/releases) page, with `SHA256SUMS.txt` to check
+   them against.
+
+   - **Windows:** unzip `<game>-vX.Y.Z-windows-amd64.zip` and run `<game>.exe`.
+   - **Linux:** extract `<game>-vX.Y.Z-linux-amd64.tar.gz` and run `./<game>`.
+     It needs OpenGL, X11 and ALSA, which desktop systems already have.
+   ```
+3. Note in §1 that CI/CD is set up, and in the decisions table of DESIGN.md.
+
+The release fails while `assets/sprites/icon.txt` is still the skeleton's
+placeholder (§7), so draw the game's own icon before the first release.
+
+**Releasing vX.Y.Z**, only when the user says, the version worked out by
+SemVer (§4) from the commits since the last tag. Needs
+[git-cliff](https://git-cliff.org).
+
+1. `git cliff --unreleased --tag vX.Y.Z --prepend CHANGELOG.md`.
+2. Tidy the new section's wording, since it becomes the release notes.
+   Anything players should know from `docs`, `test`, `build`, `ci` or
+   `chore` commits, which git-cliff leaves out, is added by hand.
+3. Commit it as `chore(release): vX.Y.Z`, then
+   `git tag -a vX.Y.Z -m "<Title> vX.Y.Z"`. The tag's message is the
+   release's title.
+4. Push the commit, then `git push origin vX.Y.Z`.
+
+Never regenerate the whole CHANGELOG.md: the tidied wording would be lost.
 
 ## 6. Code conventions
 

@@ -59,7 +59,8 @@ runs at 60 ticks per second, and all game logic counts in ticks.
    it.
 2. Start Claude Code in the folder. With no `DESIGN.md` or `PLAN.md`, it
    follows the **New game setup** section of `CLAUDE.md`: it asks about the
-   game, then (once you agree) runs `tools/newgame`, sets the preset, writes
+   game, including whether to set up CI/CD, then (once you agree) runs
+   `tools/newgame`, sets the preset, sets up CI/CD if wanted, writes
    `DESIGN.md` and `PLAN.md`, and updates `CLAUDE.md`. It stops there, before
    any game code. Anything you want Claude to know that is yours alone goes
    in `CLAUDE.local.md`.
@@ -85,6 +86,7 @@ runs at 60 ticks per second, and all game logic counts in ticks.
 5. In `CLAUDE.md`, describe your game in §1, replace §2 with the short
    "Working documents" section it gives, and delete §11. Keep it tracked; put
    personal instructions in `CLAUDE.local.md`.
+6. If you want release builds, set up CI/CD as in [Releases](#releases).
 
 ## Commands
 
@@ -140,6 +142,16 @@ checked when loaded.
   after an intended change, rewrite them with `go test ./<package> -update`.
 - `go run -tags debug` adds an overlay with ticks and frames per second, the
   tick count and the scene, and lets scenes draw collision boxes.
+
+## Releases
+
+A game can have its releases built by GitHub Actions. The templates are in
+`tools/release/`, and `CLAUDE.md` §5 gives the steps to set them up and to
+release a version. Once set up, pushing a tag `vX.Y.Z` tests the game on
+Linux and Windows, builds a Windows zip and a Linux tarball, and publishes
+them as a GitHub release with checksums and notes from `CHANGELOG.md`.
+Nothing runs on an ordinary push. The release fails until the placeholder
+program icon is replaced with the game's own.
 
 ## Keeping games and the skeleton in step
 
