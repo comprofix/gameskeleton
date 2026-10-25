@@ -44,15 +44,11 @@ jobs:
         run: |
           go generate ./assets
           git diff --exit-code
-      # The skeleton's placeholder icon marks itself on its first line; a
-      # game is released only with its own.
+      # winicon refuses while icon.Placeholder is true, so a game is
+      # released only with its own icon. Checked here to fail early.
       - name: Check the program icon is the game's own
         if: runner.os == 'Linux'
-        run: |
-          if head -n 1 assets/sprites/icon.txt | grep -q '^; placeholder'; then
-            echo "assets/sprites/icon.txt is still the skeleton's placeholder: draw the game's own icon first" >&2
-            exit 1
-          fi
+        run: go run ./cmd/winicon "$RUNNER_TEMP/icon.ico"
 
   build:
     needs: check

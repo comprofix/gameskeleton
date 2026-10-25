@@ -208,8 +208,9 @@ There is no workflow on every push.
    ```
 3. Note in §1 that CI/CD is set up, and in the decisions table of DESIGN.md.
 
-The release fails while `assets/sprites/icon.txt` is still the skeleton's
-placeholder (§7), so draw the game's own icon before the first release.
+The release fails while the program icon is still the skeleton's
+placeholder (`icon.Placeholder`, §7), so draw the game's own icon before the
+first release.
 
 **Releasing vX.Y.Z**, only when the user says, the version worked out by
 SemVer (§4) from the commits since the last tag. Needs
@@ -315,10 +316,10 @@ assets/            assets.go, sprites/, gen/, font/
 - The game only loads PNG and JSON, so a sprite drawn by hand can replace a
   generated one without code changes.
 - **Program icon:** `assets/sprites/icon.txt` holds the window's and the exe's
-  icon, drawn at 16 and 32 pixels. The skeleton's is a placeholder, marked as
-  such on its first line. Once the game is designed and built, draw the
-  game's own in its place and delete that line; a release fails while it is
-  still there.
+  icon, drawn at 16 and 32 pixels. The skeleton's is a placeholder, and
+  `icon.Placeholder` says so. Once the game is designed and built, draw the
+  game's own in its place and set `icon.Placeholder` to false. Until then
+  `cmd/winicon` refuses to write the exe's icon, so a release fails.
 
 ## 8. Audio
 

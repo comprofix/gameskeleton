@@ -23,6 +23,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, "usage: winicon file.ico")
 		os.Exit(2)
 	}
+	if icon.Placeholder {
+		fmt.Fprintln(os.Stderr, "winicon: the program icon is still the skeleton's placeholder: draw the game's own, then set icon.Placeholder to false")
+		os.Exit(1)
+	}
 	ico, err := makeIco()
 	if err != nil {
 		log.Fatal(err)
