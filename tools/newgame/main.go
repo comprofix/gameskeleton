@@ -4,10 +4,11 @@
 //	go run ./tools/newgame -module github.com/comprofix/<game> -name <game> -title "<Game Title>" [-keep-demo]
 //
 // It changes the module path in go.mod and every import, and the skeleton's
-// name in code and in CLAUDE.md; renames cmd/gameskeleton to cmd/<game>;
-// sets config.Title; removes the demo unless -keep-demo is given; writes a
-// new README saying which skeleton version it came from; removes itself;
-// and runs go build, go vet and go test to check everything still works.
+// name in code, in CLAUDE.md and in the release templates; renames
+// cmd/gameskeleton to cmd/<game>; sets config.Title; removes the demo unless
+// -keep-demo is given; writes a new README saying which skeleton version it
+// came from; removes itself; and runs go build, go vet and go test to check
+// everything still works.
 //
 // It refuses to run where DESIGN.md exists, so it can't damage the skeleton
 // itself, whose working documents live beside it.
@@ -153,7 +154,7 @@ func rewrite(root string, o options) (int, error) {
 			return nil
 		}
 		switch filepath.Ext(path) {
-		case ".go", ".mod", ".md":
+		case ".go", ".mod", ".md", ".yml", ".toml":
 		default:
 			return nil
 		}
