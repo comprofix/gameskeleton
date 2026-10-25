@@ -18,8 +18,8 @@ it must stay **game-agnostic**. The only game content is the small demo
 > During new game setup (§2), Claude replaces this section with the game's own
 > description and fixed decisions, and removes §11.
 
-**Current phase:** v0.1.0 is released. For further work on the skeleton, §2
-offers to write fresh DESIGN.md and PLAN.md for that work.
+For further work on the skeleton, §2 offers to write fresh DESIGN.md and
+PLAN.md for that work.
 
 ## 2. New game setup
 
