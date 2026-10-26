@@ -11,7 +11,8 @@ reads and `.gitignore` keeps out of git.
 one of two art styles: **pixel art** (sprites, whole-pixel scaling, bitmap
 fonts), for retro and arcade games, or **smooth** (1280×720, shapes drawn in
 code, an outline font, smooth scaling), which suits card, board and table
-games. New games are created from it (it is a GitHub template repository),
+games. A game can also have both, as two looks switched in Options. New
+games are created from it (it is a GitHub template repository),
 so it must stay **game-agnostic**. The only game content is the small demo
 ("Dot Dash"), which is pixel art.
 
@@ -38,12 +39,16 @@ either is missing:
    - The name, a one-line summary, and the module path
      (`github.com/comprofix/<game>`).
    - A brand-new game, or a remake of an existing one (§9 applies to remakes).
-   - "Pixel art or smooth?" (§7):
+   - "Pixel art, smooth, or both?" (§7):
      - **Pixel art:** sprites on a low-resolution screen scaled by whole
        pixels, with bitmap fonts. For retro and arcade games.
      - **Smooth:** the **Smooth** preset, 1280×720, Resurrect 64, `Chip4`,
        scaled smoothly to any window; art drawn in code from shapes, text in
        Go Mono Bold. For card, board, puzzle and table games.
+     - **Both:** two looks, switched in Options: Smooth, which players
+       start on, and Modern pixel art at half its size. The game's own
+       scenes start as pixel art, enlarged in the smooth look, and are
+       redrawn for it one at a time (§7).
    - For pixel art, the preset:
      - **Modern:** 640×360, Resurrect 64, `Chip4`.
      - **Classic PC:** 320×200, Sweetie 16, `Speaker`, optional CRT 4:3.
@@ -52,16 +57,18 @@ either is missing:
      mechanics.
    - What is not included in v1.
    - For pixel art, whether to keep the Dot Dash demo for reference (it is
-     removed by default). A smooth game never keeps it.
+     removed by default). A smooth game, or one with both looks, never keeps
+     it.
    - "Do you want to set up CI/CD as part of this project?" That is, release
      builds made by GitHub Actions when a version tag is pushed (§5). Nothing
      runs until the first tag, so it is safe to set up on day one.
 3. **Summarise the answers and wait for the go-ahead.** Then:
    1. Run `go run ./tools/newgame -module … -name … -title "…" -style …`,
-      with `-style pixel` or `-style smooth`. Add `-keep-demo` only if asked
-      (pixel art only). It renames the module, the command folder and the
-      commands in §5, sets the title and the preset for the style (`Modern`
-      or `Smooth`), writes a new README and removes itself.
+      with `-style pixel`, `-style smooth` or `-style both`. Add
+      `-keep-demo` only if asked (pixel art only). It renames the module, the
+      command folder and the commands in §5, sets the title and the preset
+      for the style (`Modern`, `Smooth`, or `Smooth` with `Modern` second),
+      writes a new README and removes itself.
    2. For pixel art with another preset, set it in
       `internal/config/project.go`: `Classic`, or a custom `Preset` added to
       `internal/config/preset.go`.
@@ -253,12 +260,13 @@ Never regenerate the whole CHANGELOG.md: the tidied wording would be lost.
 - **Project settings** are chosen only in `internal/config/project.go`:
   - the title and tick rate;
   - `Project`, the preset, which sets the resolution, scale modes and
-    palette.
+    palette;
+  - `Second`, the second look in a game with two, or nil (§7).
 
   Presets are defined in `internal/config/preset.go`. The game starts from
-  `config.Project`; scenes read the screen size from `Context.Preset`, and
-  the drawing helpers from the image they draw on. Never hard-code a screen
-  size or palette anywhere else.
+  `config.Project`; scenes read the screen size from `Context.Preset`, the
+  look shown, and the drawing helpers from the image they draw on. Never
+  hard-code a screen size or palette anywhere else.
 - Colours are named with the constants of the chosen palette's package (e.g.
   `resurrect64.Gold`) and turned into RGBA with `gfx.RGBA`.
 - Tuning values (speeds, timings, scores, levels, skill tables) live in
@@ -279,9 +287,10 @@ Never regenerate the whole CHANGELOG.md: the tidied wording would be lost.
   Scripted input drives the mouse too (`input.MoveTo`, `input.Click`).
 - The game plugs into the shared scenes through `game.Content` (its play
   scene, sounds and sprite sheets; optionally a demo behind the title and
-  its own title and high score tunes), set in one file such as
-  `internal/game/<game>.go`. Until it is set, Play is disabled in the main
-  menu:
+  its own title and high score tunes; in a game with two looks,
+  `NativePlay` once its play scene is drawn for both, §7), set in one file
+  such as `internal/game/<game>.go`. Until it is set, Play is disabled in
+  the main menu:
 
   ```go
   func init() {
@@ -300,7 +309,8 @@ internal/
   scene/scenetest/ headless test harness, golden files
   ui/              list menu (keys and mouse), panel, text helpers
   shapes/          smooth shapes, panels and buttons in palette colours
-  config/          project.go, settings, tuning values, skills, levels
+  config/          project.go, presets and looks, settings, tuning values,
+                   skills, levels
   session/         one game in progress
   score/           high score tables
   gfx/             palette, schemes, sheets, animation, fonts (bitmap and
@@ -319,7 +329,7 @@ assets/            assets.go, sprites/, gen/, font/
 
 ## 7. Art
 
-The game's art style, chosen at setup (§2), is pixel art or smooth.
+The game's art style, chosen at setup (§2), is pixel art, smooth, or both.
 Either way colours come from the palette by name, and the program icon is a
 sprite (below).
 
@@ -357,6 +367,29 @@ sprite (below).
 - Sprites still work, for anything better drawn as an image.
 - Check new art by eye from a screenshot before using it. Preview programs
   go in the scratchpad, never in the repo.
+
+### Both looks
+
+- `config.Project` is the first look, which players start on, and
+  `config.Second` the other; Options opens on Look, and the choice is saved.
+  `-style both` gives Smooth first and Modern second.
+- The two must pass `Looks.Check`, run at start-up: one pixel, one smooth,
+  the same palette and audio style, the smooth screen a whole multiple of
+  the pixel one. Smooth is Modern ×2. For Classic PC's 320×200 at ×4, add a
+  1280×800 smooth preset and a 320×200 pixel one with the same palette.
+- Game coordinates stay those of the pixel screen, so the gameplay is the
+  same in both looks; only the drawing differs.
+- **The shared scenes are native**: they draw at the shown screen's size in
+  either look. A game's own scene is pixel art until it says otherwise:
+  while the smooth look is shown it is made, updated and drawn with the
+  pixel look's preset and fonts, then enlarged with sharp pixels. The
+  pointer is still in the shown screen's pixels, so such a scene divides it
+  by the multiple.
+- Redraw scenes for the smooth look one at a time. A scene drawn for both
+  has a `Native()` method and reads `Context.Preset` to choose how to draw.
+  Once the play scene (and demo) are native, set `Content.NativePlay`; the
+  game panics if the two disagree.
+- Check both looks by screenshot whenever a scene's drawing changes.
 
 ### Program icon
 
@@ -410,8 +443,9 @@ Removed during new game setup.
 
 - **Stay game-agnostic.** Only add what a typical 2D game needs, pixel or
   smooth. Anything else goes in PLAN.md "Discuss later".
-- **All three presets must work:** Modern, Classic PC and Smooth. Test them
-  all whenever the scaler, palettes, fonts, input or audio change, and the
+- **All three presets must work:** Modern, Classic PC and Smooth, and the
+  two looks together (Smooth with Modern). Test them all whenever the
+  scaler, palettes, fonts, input, audio or the shared scenes change, and the
   shared scenes by mouse as well as keys.
 - **Keep the demo separate.** Demo code lives only in `internal/demo` and
   `assets/sprites/demo.txt`. `tools/newgame` must be able to remove it

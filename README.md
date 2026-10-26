@@ -3,7 +3,8 @@
 A starter template for 2D games written in Go with
 [Ebitengine](https://ebitengine.org/), in one of two art styles: **pixel
 art**, for retro and arcade games, or **smooth**, art drawn in code at
-1280×720, for card, board and table games. New games are made from it with
+1280×720, for card, board and table games; or both, as two looks the player
+switches between in Options. New games are made from it with
 GitHub's **Use this template** button. It comes with a tiny pixel-art demo
 game, **Dot Dash**, which shows every part working and is removed when a
 real game begins.
@@ -20,6 +21,9 @@ real game begins.
 - **Smooth art:** shapes drawn in code in palette colours (rounded
   rectangles, circles, lines, polygons, panels and buttons with hover and
   pressed looks), and Go Mono Bold for text. Sprites work here too.
+- **Two looks:** a game can offer a pixel look and a smooth one, switched
+  in Options. The menus are drawn for both; the game's own scenes start as
+  pixel art, enlarged in the smooth look, and can be redrawn one at a time.
 - **Program icon:** drawn as a sprite like the rest, shown on the window and
   linked into the Windows exe. The skeleton's is a placeholder for each game
   to replace with its own.
@@ -60,6 +64,12 @@ and tick rate. Nothing else in the code hard-codes a screen size or palette.
 A game can also add its own `Preset` in `internal/config/preset.go`. The game
 runs at 60 ticks per second, and all game logic counts in ticks.
 
+A game with two looks names the second as `Second` in `project.go`, beside
+`Project`, which players start on. The two must share a palette and sound,
+one pixel and one smooth, with the smooth screen a whole multiple of the
+pixel one: Smooth and Modern (×2) are such a pair. The look is chosen in
+Options and saved.
+
 ## Starting a new game
 
 ### With Claude Code
@@ -68,7 +78,7 @@ runs at 60 ticks per second, and all game logic counts in ticks.
    it.
 2. Start Claude Code in the folder. With no `DESIGN.md` or `PLAN.md`, it
    follows the **New game setup** section of `CLAUDE.md`: it asks about the
-   game, including pixel art or smooth and whether to set up CI/CD, then (once you agree) runs
+   game, including pixel art, smooth or both, and whether to set up CI/CD, then (once you agree) runs
    `tools/newgame`, sets the preset, sets up CI/CD if wanted, writes
    `DESIGN.md` and `PLAN.md`, and updates `CLAUDE.md`. It stops there, before
    any game code. Anything you want Claude to know that is yours alone goes
@@ -85,16 +95,18 @@ runs at 60 ticks per second, and all game logic counts in ticks.
 
    It changes the module path and every import, renames `cmd/gameskeleton` to
    `cmd/<game>`, sets the title and the preset for the style (`-style pixel`
-   gives Modern, `-style smooth` gives Smooth), removes the demo (add
-   `-keep-demo` to keep it, for pixel art only), writes a new README, removes
-   itself, and builds and tests the result.
+   gives Modern, `-style smooth` gives Smooth, `-style both` gives Smooth
+   with Modern as the second look), removes the demo (add `-keep-demo` to
+   keep it, for pixel art only), writes a new README, removes itself, and
+   builds and tests the result.
 3. For pixel art with another preset, set it in
    `internal/config/project.go`.
 4. Wire in your play scene, sounds and sprite sheets through `game.Content`,
    and, if you like, a demo to run behind the title (`NewDemo`) and your own
    title and high score tunes (`TitleTune`, `ScoresTune`),
    in a file such as `internal/game/<game>.go`. Until then, Play is greyed out
-   in the menu.
+   in the menu. With two looks, set `NativePlay` once the play scene is drawn
+   for both.
 5. In `CLAUDE.md`, describe your game in §1, replace §2 with the short
    "Working documents" section it gives, and delete §11. Keep it tracked; put
    personal instructions in `CLAUDE.local.md`.
@@ -143,7 +155,8 @@ Both are written next to the game (or in the working folder under `go run`),
 atomically, so a crash can't leave half a file.
 
 - `settings.json`: window size, fullscreen, scale mode, sound, music and
-  effects switches, master, music and effects volumes, and reduced motion.
+  effects switches, master, music and effects volumes, reduced motion, and
+  in a game with two looks the look.
 - `scores.json`: a top-10 table for each skill, with 3-letter initials.
 
 A missing or broken file means defaults, never a crash, and every value is
