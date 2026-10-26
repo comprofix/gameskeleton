@@ -93,7 +93,7 @@ func (t *Tally) Update(ctx *Context) error {
 // Draw implements Scene.
 func (t *Tally) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
-	h := config.Project.ScreenHeight
+	h := ctx.Preset.ScreenHeight
 	dst.Fill(gfx.RGBA(sc.Backdrop))
 	y := f.Large.LineHeight()
 	ui.TextCentred(dst, f.Large, t.heading, y, sc.Title, sc.Shadow)
@@ -109,7 +109,7 @@ func (t *Tally) Draw(ctx *Context, dst *ebiten.Image) {
 	row := func(i int, label string, points int, c int) {
 		s := label + strings.Repeat(" ", width-len(label)-pointsCols) + fmt.Sprintf("%*d", pointsCols, points)
 		ry := y + 2*f.Large.LineHeight() + i*(f.Small.LineHeight()+ui.LineGap)
-		f.Small.DrawShadowed(dst, s, f.Small.CentreX(s), ry, c, sc.Shadow)
+		f.Small.DrawShadowed(dst, s, f.Small.CentreX(dst, s), ry, c, sc.Shadow)
 	}
 	for i, l := range t.lines {
 		if i > t.line {
@@ -196,7 +196,7 @@ func (e *HighScoreEntry) Update(ctx *Context) error {
 // Draw implements Scene.
 func (e *HighScoreEntry) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
-	h := config.Project.ScreenHeight
+	h := ctx.Preset.ScreenHeight
 	dst.Fill(gfx.RGBA(sc.Backdrop))
 	y := f.Large.LineHeight()
 	ui.TextCentred(dst, f.Large, "NEW HIGH SCORE", y, sc.Title, sc.Shadow)
@@ -209,7 +209,7 @@ func (e *HighScoreEntry) Draw(ctx *Context, dst *ebiten.Image) {
 	// The letters in the large font, spaced a cell apart, with the current
 	// one highlighted and underlined.
 	cell := 2 * f.Large.CellWidth()
-	x0 := (config.Project.ScreenWidth - (config.InitialsLen*cell - f.Large.CellWidth())) / 2
+	x0 := (ctx.Preset.ScreenWidth - (config.InitialsLen*cell - f.Large.CellWidth())) / 2
 	for i, l := range e.letters {
 		c := sc.Text
 		x := x0 + i*cell
@@ -267,7 +267,7 @@ func (t *HighScoreTable) Update(ctx *Context) error {
 // Draw implements Scene.
 func (t *HighScoreTable) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
-	h := config.Project.ScreenHeight
+	h := ctx.Preset.ScreenHeight
 	dst.Fill(gfx.RGBA(sc.Backdrop))
 	y := f.Large.LineHeight()
 	ui.TextCentred(dst, f.Large, "HIGH SCORES", y, sc.Title, sc.Shadow)
@@ -294,7 +294,7 @@ func (t *HighScoreTable) Draw(ctx *Context, dst *ebiten.Image) {
 				c = sc.Title
 			}
 		}
-		f.Small.DrawShadowed(dst, s, f.Small.CentreX(s), y, c, sc.Shadow)
+		f.Small.DrawShadowed(dst, s, f.Small.CentreX(dst, s), y, c, sc.Shadow)
 		y += f.Small.LineHeight() + ui.LineGap
 	}
 	ui.TextCentred(dst, f.Small, "Left/Right: skill   Enter: menu", h-2*f.Small.LineHeight(), sc.Dim, sc.Shadow)

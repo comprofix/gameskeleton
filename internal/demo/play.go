@@ -54,7 +54,7 @@ type Play struct {
 func NewPlay(ctx *scene.Context, skill config.Skill) scene.Scene {
 	ctx.Audio.PlayTune(DashTune)
 	ctx.Session = session.New(skill, 0)
-	cols, rows := Board(config.Project)
+	cols, rows := Board(ctx.Preset)
 	return &Play{world: world.New(ctx.Session, cols, rows, world.ForSkill(skill.ID), ctx.RNG)}
 }
 
@@ -118,7 +118,7 @@ func heldDir(in *input.Input) world.Dir {
 func (p *Play) Draw(ctx *scene.Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
 	w := p.world
-	sw := config.Project.ScreenWidth
+	sw := ctx.Preset.ScreenWidth
 	dst.Fill(gfx.RGBA(sc.Backdrop))
 
 	// The score line: score, time left, hearts.
@@ -137,7 +137,7 @@ func (p *Play) Draw(ctx *scene.Context, dst *ebiten.Image) {
 	}
 
 	// The board.
-	ox, oy := boardOrigin(w)
+	ox, oy := boardOrigin(ctx.Preset, w)
 	ui.Panel(dst, image.Rect(ox-2, oy-2, ox+w.Cols*Cell+2, oy+w.Rows*Cell+2), sc.Panel, sc.Border)
 	dot := sheet.Sprite("dot")
 	for i, d := range w.Dots {
@@ -173,9 +173,8 @@ func (p *Play) Draw(ctx *scene.Context, dst *ebiten.Image) {
 }
 
 // boardOrigin is the screen position of the board's top-left cell: centred
-// below the score line.
-func boardOrigin(w *world.World) (x, y int) {
-	p := config.Project
+// below the score line on preset p's screen.
+func boardOrigin(p config.Preset, w *world.World) (x, y int) {
 	return (p.ScreenWidth - w.Cols*Cell) / 2, HUD + (p.ScreenHeight-HUD-w.Rows*Cell)/2
 }
 
@@ -224,5 +223,5 @@ func (g *Ended) Draw(ctx *scene.Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
 	g.play.Draw(ctx, dst)
 	scene.Dim(dst, sc.Shadow, 0.5)
-	ui.TextCentred(dst, f.Large, g.msg, (config.Project.ScreenHeight-f.Large.LineHeight())/2, sc.Title, sc.Shadow)
+	ui.TextCentred(dst, f.Large, g.msg, (ctx.Preset.ScreenHeight-f.Large.LineHeight())/2, sc.Title, sc.Shadow)
 }

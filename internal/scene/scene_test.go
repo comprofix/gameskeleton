@@ -32,6 +32,7 @@ func newHarness(t *testing.T, first Scene) *harness {
 		ctx: &Context{
 			Input:    input.New(script),
 			RNG:      rand.New(rand.NewPCG(1, 2)),
+			Preset:   config.Project,
 			Settings: &set,
 			NewPlay:  func(*Context, config.Skill) Scene { return &stubPlay{} },
 			Scores:   score.New(),
@@ -336,10 +337,10 @@ func TestTitleRunsTheDemo(t *testing.T) {
 
 // click clicks the middle of item i of a menu screen's menu, lets go, and
 // waits out any fade.
-func (h *harness) click(i int, top func(gfx.Fonts) int) {
+func (h *harness) click(i int, top func(*Context) int) {
 	f := h.ctx.Fonts
-	y := top(f) + i*(f.Small.LineHeight()+ui.LineGap) + f.Small.LineHeight()/2
-	h.mouse(input.Click(config.Project.ScreenWidth/2, y))
+	y := top(h.ctx) + i*(f.Small.LineHeight()+ui.LineGap) + f.Small.LineHeight()/2
+	h.mouse(input.Click(h.ctx.Preset.ScreenWidth/2, y))
 }
 
 // mouse plays a one-tick step, lets go, and waits out any fade.
@@ -357,8 +358,8 @@ func (h *harness) rightClick() {
 // TestMenusByMouse: the shared scenes can be used by mouse alone.
 func TestMenusByMouse(t *testing.T) {
 	h := newHarness(t, NewTitle())
-	h.ctx.Fonts = gfx.SmoothFonts(config.Project.ScreenHeight) // the mouse needs the menus measured
-	h.click(0, menuTop)                                        // any button
+	h.ctx.Fonts = gfx.SmoothFonts(h.ctx.Preset.ScreenHeight) // the mouse needs the menus measured
+	h.click(0, menuTop)                                      // any button
 	current[*MainMenu](t, h)
 	h.click(1, menuTop)
 	opts := current[*Options](t, h)

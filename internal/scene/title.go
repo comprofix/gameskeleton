@@ -50,7 +50,7 @@ func (t *Title) Update(ctx *Context) error {
 // Draw implements Scene.
 func (t *Title) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
-	h := config.Project.ScreenHeight
+	w, h := ctx.Preset.ScreenWidth, ctx.Preset.ScreenHeight
 	// Without a demo, the name a third of the way down and the prompt two
 	// thirds; over a demo, both together on a panel, so they read over it.
 	y, py := h/3-f.Large.LineHeight()/2, h*2/3
@@ -61,7 +61,7 @@ func (t *Title) Draw(ctx *Context, dst *ebiten.Image) {
 		body := f.Large.LineHeight() + pad + f.Small.LineHeight()
 		y = (h - body) / 2
 		py = y + f.Large.LineHeight() + pad
-		ui.Panel(dst, ui.PanelAround(f.Large.Width(config.Title)+2*pad, body, y, pad), sc.Panel, sc.Border)
+		ui.Panel(dst, ui.PanelAround(w, f.Large.Width(config.Title)+2*pad, body, y, pad), sc.Panel, sc.Border)
 	} else {
 		dst.Fill(gfx.RGBA(sc.Backdrop))
 	}
