@@ -192,17 +192,32 @@ func (s *Options) items(ctx *Context) []ui.Item {
 			},
 		}
 	}
-	modes := ctx.Preset.ScaleModes
-	return []ui.Item{
-		{Label: "Scale", Value: func() string { return ScaleModeName(set.ScaleMode) }, Disabled: len(modes) < 2,
+	looks := ctx.Looks
+	// Scale is the shown look's, dimmed while it has one mode, as F9 is.
+	modes := func() []config.ScaleMode { return set.Shown(looks).ScaleModes }
+	var items []ui.Item
+	if looks.Two() {
+		items = append(items, ui.Item{Label: "Look", Value: func() string { return set.Shown(looks).Name },
+			Adjust: func(int) {
+				l := looks.Second.Name
+				if set.Shown(looks).Name == l {
+					l = looks.First.Name
+				}
+				set.Look = l
+				ctx.SettingsChanged()
+			}})
+	}
+	return append(items, []ui.Item{
+		{Label: "Scale", Value: func() string { return ScaleModeName(set.Mode(looks)) },
+			DisabledIf: func() bool { return len(modes()) < 2 },
 			Adjust: func(d int) {
-				i := 0
-				for j, m := range modes {
+				ms, i := modes(), 0
+				for j, m := range ms {
 					if m == set.ScaleMode {
 						i = j
 					}
 				}
-				set.ScaleMode = modes[(i+d+len(modes))%len(modes)]
+				set.ScaleMode = ms[(i+d+len(ms))%len(ms)]
 				ctx.SettingsChanged()
 			}},
 		{Label: "Fullscreen", Value: ui.OnOff(&set.Fullscreen), Adjust: toggle(&set.Fullscreen)},
@@ -217,7 +232,7 @@ func (s *Options) items(ctx *Context) []ui.Item {
 		}},
 		{Label: "Reduced motion", Value: ui.OnOff(&set.ReducedMotion), Adjust: toggle(&set.ReducedMotion)},
 		{Label: "Back", Confirm: func() { ctx.Switch(s.back()) }},
-	}
+	}...)
 }
 
 // steps is a 0–1 volume as a whole number of steps.

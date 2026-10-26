@@ -33,6 +33,7 @@ func newHarness(t *testing.T, first Scene) *harness {
 			Input:    input.New(script),
 			RNG:      rand.New(rand.NewPCG(1, 2)),
 			Preset:   config.Project,
+			Looks:    config.ProjectLooks(),
 			Settings: &set,
 			NewPlay:  func(*Context, config.Skill) Scene { return &stubPlay{} },
 			Scores:   score.New(),
@@ -333,6 +334,44 @@ func TestTitleRunsTheDemo(t *testing.T) {
 	}
 	h.press(ebiten.KeyEnter)
 	current[*MainMenu](t, h)
+}
+
+// TestOptionsLook checks Look comes first in Options only in a game with two
+// looks, switches between them, and that Scale is dimmed while the shown
+// look has one mode.
+func TestOptionsLook(t *testing.T) {
+	h := newHarness(t, NewOptions(func() Scene { return NewMainMenu() }))
+	h.ticks(1)
+	if l := current[*Options](t, h).menu.Items[0].Label; l == "Look" {
+		t.Error("a game with one look offers Look")
+	}
+
+	modern := config.Modern // given CRT, so Scale has two modes in it
+	modern.ScaleModes = []config.ScaleMode{config.ScaleInteger, config.ScaleCRT}
+	looks := config.Looks{First: config.Smooth, Second: &modern}
+	set := config.DefaultSettings(looks)
+	h = newHarness(t, NewOptions(func() Scene { return NewMainMenu() }))
+	h.ctx.Looks, h.ctx.Settings = looks, &set
+	h.ticks(1)
+	m := &current[*Options](t, h).menu
+	if m.Items[0].Label != "Look" || m.Text(0) != "Look: Smooth" {
+		t.Fatalf("first item %q, want Look on Smooth", m.Text(0))
+	}
+	scale := m.Items[1]
+	if scale.Label != "Scale" || !scale.DisabledIf() {
+		t.Errorf("Scale is not dimmed under the smooth look")
+	}
+	h.press(ebiten.KeyEnter)
+	if set.Look != modern.Name || !h.ctx.TakeSettingsChanged() {
+		t.Fatalf("Enter on Look left it on %q", set.Look)
+	}
+	if scale.DisabledIf() {
+		t.Error("Scale is dimmed under the pixel look")
+	}
+	h.press(ebiten.KeyArrowRight)
+	if set.Look != config.Smooth.Name {
+		t.Errorf("Right on Look left it on %q, want back to Smooth", set.Look)
+	}
 }
 
 // lookPlay is a play scene that notes the screen width it is made and
