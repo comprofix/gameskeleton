@@ -71,6 +71,17 @@ type MainMenu struct {
 	menu ui.Menu
 }
 
+// The shared scenes draw at the screen's own size in either look.
+func (*Title) Native()          {}
+func (*MainMenu) Native()       {}
+func (*SkillSelect) Native()    {}
+func (*Options) Native()        {}
+func (*Pause) Native()          {}
+func (*SoundTest) Native()      {}
+func (*Tally) Native()          {}
+func (*HighScoreEntry) Native() {}
+func (*HighScoreTable) Native() {}
+
 // NewMainMenu returns the main menu.
 func NewMainMenu() *MainMenu { return &MainMenu{} }
 
@@ -112,7 +123,7 @@ func (s *SkillSelect) Update(ctx *Context) error {
 	if s.menu.Items == nil {
 		for _, sk := range config.Skills {
 			s.menu.Items = append(s.menu.Items, ui.Item{Label: sk.Name, Confirm: func() {
-				ctx.Switch(ctx.NewPlay(ctx, sk))
+				ctx.Switch(ctx.makeGame(func(c *Context) Scene { return c.NewPlay(c, sk) }))
 			}})
 		}
 		menuSounds(ctx, &s.menu)
@@ -267,7 +278,7 @@ func pauseMenuTop(ctx *Context) int { return pauseTop(ctx) + 2*ctx.Fonts.Large.L
 // Draw implements Scene.
 func (p *Pause) Draw(ctx *Context, dst *ebiten.Image) {
 	sc, f := ctx.Scheme, ctx.Fonts
-	p.under.Draw(ctx, dst)
+	drawScene(ctx, p.under, dst)
 	Dim(dst, sc.Shadow, 0.6)
 	ui.TextCentred(dst, f.Large, "PAUSED", pauseTop(ctx), sc.Title, sc.Shadow)
 	drawMenuPanel(ctx, dst, &p.menu, pauseMenuTop(ctx))
