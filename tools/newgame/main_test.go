@@ -79,12 +79,13 @@ func TestNewGame(t *testing.T) {
 		t.Skip("builds and tests whole games")
 	}
 	for _, c := range []struct {
-		name, style, preset string
-		keep                bool
+		name, style, preset, second string
+		keep                        bool
 	}{
-		{"pixel without the demo", "pixel", "Modern", false},
-		{"pixel with the demo", "pixel", "Modern", true},
-		{"smooth", "smooth", "Smooth", false},
+		{"pixel without the demo", "pixel", "Modern", "*Preset", false},
+		{"pixel with the demo", "pixel", "Modern", "*Preset", true},
+		{"smooth", "smooth", "Smooth", "*Preset", false},
+		{"both looks", "both", "Smooth", "= &Modern", false},
 	} {
 		keep := c.keep
 		t.Run(c.name, func(t *testing.T) {
@@ -122,6 +123,9 @@ func TestNewGame(t *testing.T) {
 			if !strings.Contains(string(project), "\nvar Project = "+c.preset+"\n") {
 				t.Errorf("the preset was not set to %s in project.go", c.preset)
 			}
+			if !strings.Contains(string(project), "\nvar Second "+c.second+"\n") {
+				t.Errorf("the second look is not `var Second %s` in project.go", c.second)
+			}
 			readme, _ := os.ReadFile(filepath.Join(dir, "README.md"))
 			if !strings.Contains(string(readme), "Created from [gameskeleton](https://github.com/comprofix/gameskeleton) v"+SkeletonVersion) {
 				t.Errorf("README does not say where it came from:\n%s", readme)
@@ -151,6 +155,7 @@ func TestRefuses(t *testing.T) {
 		"no title":      {module: good.module, name: "game", title: "  ", style: "pixel"},
 		"bad style":     {module: good.module, name: "game", title: "Game", style: "vector"},
 		"smooth demo":   {module: good.module, name: "game", title: "Game", style: "smooth", keepDemo: true},
+		"both demo":     {module: good.module, name: "game", title: "Game", style: "both", keepDemo: true},
 		"no skeleton":   good,
 		"design exists": good,
 	} {

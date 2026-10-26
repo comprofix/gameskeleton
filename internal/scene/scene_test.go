@@ -341,6 +341,7 @@ func TestTitleRunsTheDemo(t *testing.T) {
 // look has one mode.
 func TestOptionsLook(t *testing.T) {
 	h := newHarness(t, NewOptions(func() Scene { return NewMainMenu() }))
+	h.ctx.Looks = config.Looks{First: config.Project}
 	h.ticks(1)
 	if l := current[*Options](t, h).menu.Items[0].Label; l == "Look" {
 		t.Error("a game with one look offers Look")

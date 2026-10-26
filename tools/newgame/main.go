@@ -1,14 +1,16 @@
 // Command newgame turns a fresh copy of the skeleton into a new game.
 // It does the steps that must be exact:
 //
-//	go run ./tools/newgame -module github.com/comprofix/<game> -name <game> -title "<Game Title>" [-style pixel|smooth] [-keep-demo]
+//	go run ./tools/newgame -module github.com/comprofix/<game> -name <game> -title "<Game Title>" [-style pixel|smooth|both] [-keep-demo]
 //
 // It changes the module path in go.mod and every import, and the skeleton's
 // name in code, in CLAUDE.md and in the release templates; renames
 // cmd/gameskeleton to cmd/<game>; sets config.Title; for the smooth art
 // style sets config.Project to the Smooth preset (pixel art keeps Modern,
-// to be changed by hand for another pixel preset); removes the demo unless
-// -keep-demo is given, and always for smooth, as the demo is pixel art;
+// to be changed by hand for another pixel preset); for both looks sets
+// config.Project to Smooth and config.Second to Modern; removes the demo
+// unless -keep-demo is given, and always for smooth or both, as the demo is
+// pixel art;
 // writes a new README saying which skeleton version it
 // came from; removes itself; and runs go build, go vet and go test to check
 // everything still works.
@@ -57,8 +59,12 @@ type options struct {
 	keepDemo, check                 bool
 }
 
-// The art styles, as -style takes them, and the preset each sets.
-var stylePresets = map[string]string{"pixel": "Modern", "smooth": "Smooth"}
+// The art styles, as -style takes them, and the preset each sets: for both
+// looks the first, with secondLook as the second.
+var stylePresets = map[string]string{"pixel": "Modern", "smooth": "Smooth", "both": "Smooth"}
+
+// secondLook is the second look -style both sets.
+const secondLook = "Modern"
 
 func main() {
 	var o options
@@ -66,7 +72,7 @@ func main() {
 	flag.StringVar(&o.module, "module", "", "the new module path, e.g. github.com/comprofix/mygame")
 	flag.StringVar(&o.name, "name", "", "the command's name, e.g. mygame (lower case letters, digits and -)")
 	flag.StringVar(&o.title, "title", "", `the game's title, e.g. "My Game"`)
-	flag.StringVar(&o.style, "style", "pixel", "the art style: pixel or smooth")
+	flag.StringVar(&o.style, "style", "pixel", "the art style: pixel, smooth, or both (Smooth first, Modern second, switched in Options)")
 	flag.BoolVar(&o.keepDemo, "keep-demo", false, "keep the Dot Dash demo (pixel art only)")
 	flag.BoolVar(&o.check, "check", true, "run go build and go test afterwards")
 	flag.Parse()
@@ -87,9 +93,9 @@ func run(o options, log io.Writer) error {
 	case strings.TrimSpace(o.title) == "":
 		return errors.New("-title: give the game's title")
 	case stylePresets[o.style] == "":
-		return fmt.Errorf("-style %q: use pixel or smooth", o.style)
-	case o.style == "smooth" && o.keepDemo:
-		return errors.New("-keep-demo: the demo is pixel art, so a smooth game can't keep it")
+		return fmt.Errorf("-style %q: use pixel, smooth or both", o.style)
+	case o.style != "pixel" && o.keepDemo:
+		return errors.New("-keep-demo: the demo is pixel art, so only a pixel game can keep it")
 	}
 	root := o.dir
 	if _, err := os.Stat(filepath.Join(root, "DESIGN.md")); err == nil {
@@ -134,7 +140,14 @@ func run(o options, log io.Writer) error {
 	if err := setPreset(project, stylePresets[o.style]); err != nil {
 		return err
 	}
-	fmt.Fprintf(log, "set the preset to %s for %s art\n", stylePresets[o.style], o.style)
+	if o.style == "both" {
+		if err := setSecond(project, secondLook); err != nil {
+			return err
+		}
+		fmt.Fprintf(log, "set the looks to %s and %s\n", stylePresets[o.style], secondLook)
+	} else {
+		fmt.Fprintf(log, "set the preset to %s for %s art\n", stylePresets[o.style], o.style)
+	}
 
 	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte(readme(o)), 0o644); err != nil {
 		return err
@@ -216,6 +229,21 @@ func setPreset(path, preset string) error {
 		return fmt.Errorf("%s: no `var Project = ...` line", path)
 	}
 	out := presetLine.ReplaceAllLiteral(data, []byte("var Project = "+preset))
+	return os.WriteFile(path, out, 0o644)
+}
+
+var secondLine = regexp.MustCompile(`(?m)^var Second \*Preset$`)
+
+// setSecond sets config.Second in project.go to the named preset.
+func setSecond(path, preset string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	if !secondLine.Match(data) {
+		return fmt.Errorf("%s: no `var Second *Preset` line", path)
+	}
+	out := secondLine.ReplaceAllLiteral(data, []byte("var Second = &"+preset))
 	return os.WriteFile(path, out, 0o644)
 }
 
