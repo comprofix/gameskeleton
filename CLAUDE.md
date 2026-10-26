@@ -255,8 +255,10 @@ Never regenerate the whole CHANGELOG.md: the tidied wording would be lost.
   - `Project`, the preset, which sets the resolution, scale modes and
     palette.
 
-  Presets are defined in `internal/config/preset.go`. Code reads them through
-  `config.Project`. Never hard-code a screen size or palette anywhere else.
+  Presets are defined in `internal/config/preset.go`. The game starts from
+  `config.Project`; scenes read the screen size from `Context.Preset`, and
+  the drawing helpers from the image they draw on. Never hard-code a screen
+  size or palette anywhere else.
 - Colours are named with the constants of the chosen palette's package (e.g.
   `resurrect64.Gold`) and turned into RGBA with `gfx.RGBA`.
 - Tuning values (speeds, timings, scores, levels, skill tables) live in
