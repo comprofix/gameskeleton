@@ -252,7 +252,6 @@ func setSecond(path, preset string) error {
 	return os.WriteFile(path, out, 0o644)
 }
 
-// readme is the new game's starting README.
 // writeGameInstructions turns the skeleton's setup and maintenance guidance
 // into the shared instructions for a game created from it. The common
 // development rules (sections 3-10) stay sourced from the skeleton AGENTS.md.
