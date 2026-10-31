@@ -205,17 +205,19 @@ func TestRestoresProjectWhenValidationFails(t *testing.T) {
 	dir := t.TempDir()
 	copySkeleton(t, dir)
 	fakeBin := t.TempDir()
+	countFile := filepath.Join(t.TempDir(), "go-count")
 	fakeGo := filepath.Join(fakeBin, "go")
-	if err := os.WriteFile(fakeGo, []byte("#!/bin/sh\nexit 17\n"), 0o755); err != nil {
+	script := "#!/bin/sh\ncount=0\nif [ -f " + countFile + " ]; then count=$(cat " + countFile + "); fi\ncount=$((count + 1))\necho \"$count\" > " + countFile + "\nif [ \"$count\" -eq 3 ]; then exit 17; fi\nexit 0\n"
+	if err := os.WriteFile(fakeGo, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	o := options{dir: dir, module: "example.com/me/game", name: "game", title: "Game", style: "pixel", check: true}
-	if err := run(o, &bytes.Buffer{}); err == nil || !strings.Contains(err.Error(), "go build") {
-		t.Fatalf("run error = %v, want go build failure", err)
+	if err := run(o, &bytes.Buffer{}); err == nil || !strings.Contains(err.Error(), "go test") {
+		t.Fatalf("run error = %v, want go test failure after cleanup", err)
 	}
-	if !exists(dir, "tools/newgame/main.go") || !exists(dir, "cmd/gameskeleton/main.go") {
-		t.Fatal("failed transformation did not restore generator and original command")
+	if !exists(dir, "tools/newgame/main.go") || !exists(dir, "cmd/gameskeleton/main.go") || !exists(dir, "internal/demo") {
+		t.Fatal("failed transformation did not restore generator, demo and original command")
 	}
 	if exists(dir, "cmd/game") {
 		t.Fatal("failed transformation left renamed command")
@@ -229,6 +231,33 @@ func TestRestoresProjectWhenValidationFails(t *testing.T) {
 	}
 }
 
+func TestRejectsSymlinkedDirectory(t *testing.T) {
+	dir := t.TempDir()
+	copySkeleton(t, dir)
+	external := t.TempDir()
+	marker := filepath.Join(external, "project.go")
+	if err := os.WriteFile(marker, []byte("external data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	config := filepath.Join(dir, "internal", "config")
+	if err := os.RemoveAll(config); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(external, config); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	o := options{dir: dir, module: "example.com/me/game", name: "game", title: "Game", style: "pixel", check: false}
+	if err := run(o, &bytes.Buffer{}); err == nil || !strings.Contains(err.Error(), "symlink") {
+		t.Fatalf("run error = %v, want symlink refusal", err)
+	}
+	got, err := os.ReadFile(marker)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "external data" {
+		t.Fatalf("external directory target changed: %q", got)
+	}
+}
 func TestRefuses(t *testing.T) {
 	good := options{module: "example.com/me/game", name: "game", title: "Game", style: "pixel"}
 	for name, o := range map[string]options{
