@@ -38,9 +38,10 @@ real game begins.
 - **Testing:** game logic runs headless and deterministic from a seed;
   scripted input, a scene harness and golden replay tests. A debug build shows
   a timing overlay and collision boxes.
-- **Agent-neutral setup:** `AGENTS.md` contains the shared project rules and
-  new-game setup workflow. It stays tracked in every game made from the
-  skeleton; `CLAUDE.md` is a compatibility hand-off for Claude Code.
+- **Agent-neutral setup:** the skeleton's `AGENTS.md` contains shared project
+  rules and the new-game setup workflow. Generated games inherit the shared
+  rules in their own tracked `AGENTS.md`; `CLAUDE.md` is a compatibility
+  hand-off for Claude Code.
 
 ## Requirements
 
@@ -107,10 +108,11 @@ Options and saved.
    in a file such as `internal/game/<game>.go`. Until then, Play is greyed out
    in the menu. With two looks, set `NativePlay` once the play scene is drawn
    for both.
-5. In `AGENTS.md`, describe your game in §1 and replace §2 with the short
-   "Working documents" section it gives. The generator removes skeleton-only
-   setup and maintenance guidance. Keep `AGENTS.md` tracked; keep personal
-   instructions in your agent's local, untracked configuration.
+5. Update §1 of `AGENTS.md` with the game's description and fixed decisions.
+   The generator has already replaced §2 with the "Working documents" section
+   and removed skeleton-only setup and maintenance guidance. Keep
+   `AGENTS.md` tracked; keep personal instructions in your agent's local,
+   untracked configuration.
 6. If you want release builds, set up CI/CD as in [Releases](#releases).
 
 ## Commands
