@@ -135,12 +135,12 @@ func TestNewGame(t *testing.T) {
 			if err != nil {
 				t.Fatalf("generated AGENTS.md: %v", err)
 			}
-			for _, want := range []string{"# AGENTS.md", "Rocket", "## 2. Working documents", "DESIGN.md", "## 3. Phases and decisions"} {
+			for _, want := range []string{"# AGENTS.md", "Rocket", "## 2. Working documents", "DESIGN.md", "## 3. Phases and decisions", "recorded in DESIGN.md"} {
 				if !strings.Contains(string(agents), want) {
 					t.Errorf("generated AGENTS.md does not contain %q", want)
 				}
 			}
-			for _, unwanted := range []string{"New game setup", "Rules for the skeleton itself", "Dot Dash", oldName} {
+			for _, unwanted := range []string{"New game setup", "Rules for the skeleton itself", "setup (§2)", "Dot Dash", oldName} {
 				if strings.Contains(string(agents), unwanted) {
 					t.Errorf("generated AGENTS.md still contains skeleton-only text %q", unwanted)
 				}
