@@ -84,10 +84,34 @@ func main() {
 
 var validName = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
+// validModulePath checks the syntax required for a Go module import path.
+// Module paths are slash-separated import paths with a dotted first element.
+func validModulePath(path string) bool {
+	if path == "" || strings.ContainsAny(path, "\\r\\n\\t\\\\\\\"") {
+		return false
+	}
+	parts := strings.Split(path, "/")
+	if len(parts) < 2 || !strings.Contains(parts[0], ".") {
+		return false
+	}
+	for _, part := range parts {
+		if part == "" || part == "." || part == ".." {
+			return false
+		}
+		for _, r := range part {
+			if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') ||
+				(r >= '0' && r <= '9') || strings.ContainsRune("-._~", r)) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func preflight(root string, o options) error {
 	switch {
-	case o.module == "" || strings.ContainsAny(o.module, " \t\"") || o.module == oldModule:
-		return fmt.Errorf("-module %q: give the new game's module path", o.module)
+	case !validModulePath(o.module) || o.module == oldModule:
+		return fmt.Errorf("-module %q: invalid module path; use a dotted host and valid slash-separated path elements", o.module)
 	case !validName.MatchString(o.name) || o.name == oldName:
 		return fmt.Errorf("-name %q: use lower case letters, digits and -, starting with a letter", o.name)
 	case strings.TrimSpace(o.title) == "":
@@ -135,10 +159,6 @@ func preflight(root string, o options) error {
 	}
 	if !strings.HasPrefix(string(gomod), "module "+oldModule+"\n") {
 		return errors.New("go.mod is not the skeleton's: has this copy already been set up?")
-	}
-	if strings.Contains(o.module, "//") || strings.HasSuffix(o.module, "/") ||
-		strings.Contains(o.module, "/../") || strings.Contains(o.module, "/./") {
-		return fmt.Errorf("-module %q: invalid module path", o.module)
 	}
 
 	agents, err := os.ReadFile(filepath.Join(root, "AGENTS.md"))
@@ -283,7 +303,7 @@ func run(o options, log io.Writer) error {
 
 func runInPlace(o options, log io.Writer) error {
 	switch {
-	case o.module == "" || strings.ContainsAny(o.module, " \t\"") || o.module == oldModule:
+	case !validModulePath(o.module) || o.module == oldModule:
 		return fmt.Errorf("-module %q: give the new game's module path", o.module)
 	case !validName.MatchString(o.name) || o.name == oldName:
 		return fmt.Errorf("-name %q: use lower case letters, digits and -, starting with a letter", o.name)
@@ -405,8 +425,16 @@ func rewrite(root string, o options) (int, error) {
 		if err != nil {
 			return err
 		}
-		s := strings.ReplaceAll(string(data), oldModule, o.module)
+		original := string(data)
+		// Protect the requested module path while replacing the skeleton name:
+		// a valid destination may itself contain "gameskeleton".
+		placeholder := "__NEWGAME_MODULE_PATH_PLACEHOLDER__"
+		for strings.Contains(original, placeholder) {
+			placeholder += "_"
+		}
+		s := strings.ReplaceAll(original, oldModule, placeholder)
 		s = strings.ReplaceAll(s, oldName, o.name)
+		s = strings.ReplaceAll(s, placeholder, o.module)
 		if s == string(data) {
 			return nil
 		}

@@ -74,6 +74,63 @@ func leftovers(t *testing.T, root string) []string {
 	return found
 }
 
+func TestRewritePreservesModuleContainingSkeletonName(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module "+oldModule+"\\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "import.go"), []byte("package example\\nimport _ \""+oldModule+"/internal/config\"\\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	module := "example.com/me/mygameskeleton-game"
+	if _, err := rewrite(dir, options{module: module, name: "arcade"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"go.mod", "import.go"} {
+		got, err := os.ReadFile(filepath.Join(dir, path))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(got), module) {
+			t.Errorf("%s does not contain requested module path %q: %s", path, module, got)
+		}
+		if strings.Contains(string(got), "myarcade-game") {
+			t.Errorf("%s had the requested module path rewritten: %s", path, got)
+		}
+	}
+}
+
+func TestValidModulePath(t *testing.T) {
+	for _, tc := range []struct {
+		path string
+		want bool
+	}{
+		{"example.com/me/game", true},
+		{"github.com/comprofix/mygameskeleton-game", true},
+		{"example.com/game.v2", true},
+		{"", false},
+		{"/example.com/game", false},
+		{"example.com/game/", false},
+		{"example.com//game", false},
+		{"example.com/./game", false},
+		{"example.com/../game", false},
+		{"example.com/..", false},
+		{"example.com/game\\nother", false},
+		{"example.com/game\\rother", false},
+		{"example.com/game\\tother", false},
+		{"example.com/game\\\\other", false},
+		{"example.com/game name", false},
+		{"example.com/game:tag", false},
+		{"localhost/game", false},
+	} {
+		t.Run(fmt.Sprintf("%q", tc.path), func(t *testing.T) {
+			if got := validModulePath(tc.path); got != tc.want {
+				t.Errorf("validModulePath(%q) = %v, want %v", tc.path, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestNewGame(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds and tests whole games")
