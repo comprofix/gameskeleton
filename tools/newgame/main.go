@@ -91,11 +91,17 @@ func validModulePath(path string) bool {
 		return false
 	}
 	parts := strings.Split(path, "/")
-	if len(parts) < 2 || !strings.Contains(parts[0], ".") {
+	if len(parts) < 2 || parts[0] == "" || parts[0][0] == '-' || !strings.Contains(parts[0], ".") {
 		return false
 	}
+	// The first element is a domain name, so it has stricter character rules.
+	for _, r := range parts[0] {
+		if !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '.' || r == '-') {
+			return false
+		}
+	}
 	for _, part := range parts {
-		if part == "" || part == "." || part == ".." {
+		if part == "" || part[0] == '.' || strings.HasSuffix(part, ".") || strings.Contains(part, "..") {
 			return false
 		}
 		for _, r := range part {
@@ -103,6 +109,41 @@ func validModulePath(path string) bool {
 				(r >= '0' && r <= '9') || strings.ContainsRune("-._~", r)) {
 				return false
 			}
+		}
+		// Module paths must be portable to Windows filesystems.
+		device := part
+		if dot := strings.IndexByte(device, '.'); dot >= 0 {
+			device = device[:dot]
+		}
+		switch strings.ToUpper(device) {
+		case "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+			"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9":
+			return false
+		}
+		if tilde := strings.LastIndexByte(part, '~'); tilde >= 0 && tilde < len(part)-1 {
+			shortName := true
+			for _, r := range part[tilde+1:] {
+				if r < '0' || r > '9' {
+					shortName = false
+					break
+				}
+			}
+			if shortName {
+				return false
+			}
+		}
+	}
+	last := parts[len(parts)-1]
+	if strings.HasPrefix(last, "v") {
+		numeric := len(last) > 1
+		for _, r := range last[1:] {
+			if (r < '0' || r > '9') && r != '.' {
+				numeric = false
+				break
+			}
+		}
+		if numeric && (last == "v1" || strings.Contains(last, ".") || last[1] == '0') {
+			return false
 		}
 	}
 	return true
