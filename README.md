@@ -38,9 +38,9 @@ real game begins.
 - **Testing:** game logic runs headless and deterministic from a seed;
   scripted input, a scene harness and golden replay tests. A debug build shows
   a timing overlay and collision boxes.
-- **Claude Code setup:** `CLAUDE.md` walks Claude through starting a new game
-  and holds the project's rules. It stays tracked in every game made from the
-  skeleton; personal instructions go in `CLAUDE.local.md`, which is not.
+- **Agent-neutral setup:** `AGENTS.md` contains the shared project rules and
+  new-game setup workflow. It stays tracked in every game made from the
+  skeleton; `CLAUDE.md` is a compatibility hand-off for Claude Code.
 
 ## Requirements
 
@@ -72,7 +72,7 @@ Options and saved.
 
 ## Starting a new game
 
-### With Claude Code
+### With a coding agent
 
 1. On GitHub, press **Use this template** to make `comprofix/<game>`, and clone
    it.
@@ -107,9 +107,10 @@ Options and saved.
    in a file such as `internal/game/<game>.go`. Until then, Play is greyed out
    in the menu. With two looks, set `NativePlay` once the play scene is drawn
    for both.
-5. In `CLAUDE.md`, describe your game in §1, replace §2 with the short
-   "Working documents" section it gives, and delete §11. Keep it tracked; put
-   personal instructions in `CLAUDE.local.md`.
+5. In `AGENTS.md`, describe your game in §1 and replace §2 with the short
+   "Working documents" section it gives. The generator removes skeleton-only
+   setup and maintenance guidance. Keep `AGENTS.md` tracked; keep personal
+   instructions in your agent's local, untracked configuration.
 6. If you want release builds, set up CI/CD as in [Releases](#releases).
 
 ## Commands
@@ -174,7 +175,7 @@ checked when loaded.
 ## Releases
 
 A game can have its releases built by GitHub Actions. The templates are in
-`tools/release/`, and `CLAUDE.md` §5 gives the steps to set them up and to
+`tools/release/`, and `AGENTS.md` §5 gives the steps to set them up and to
 release a version. Once set up, pushing a tag `vX.Y.Z` tests the game on
 Linux and Windows, builds a Windows zip and a Linux tarball, and publishes
 them as a GitHub release with checksums and notes from `CHANGELOG.md`.
@@ -191,10 +192,10 @@ Existing games are not updated automatically.
 ## Personal documents
 
 `DESIGN.md` and `PLAN.md` are personal working documents. `.gitignore` keeps
-them out of git, so back them up somewhere else. `CLAUDE.md` is tracked, so
-anyone working on the game with Claude Code gets the same guidance; put
-personal instructions in `CLAUDE.local.md`, which Claude Code also reads and
-`.gitignore` keeps out of git.
+them out of git, so back them up somewhere else. `AGENTS.md` is tracked, so everyone working on the game gets the same shared
+guidance. `CLAUDE.md` is a compatibility hand-off for Claude Code. Keep
+personal instructions in the local, untracked configuration supported by
+your chosen coding agent.
 
 ## License
 
