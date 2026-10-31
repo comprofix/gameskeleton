@@ -4,7 +4,7 @@
 # on Ubuntu; the Windows build needs no cgo, so it is cross-built.
 #
 # The skeleton's template: copied to .github/workflows/ when a game sets up
-# CI/CD (CLAUDE.md §5). The tag must be annotated, `<Title> vX.Y.Z`, as its
+# CI/CD (AGENTS.md §5). The tag must be annotated, `<Title> vX.Y.Z`, as its
 # message is the release's title.
 name: Release
 
