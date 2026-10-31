@@ -1,7 +1,6 @@
-# Personal working documents (not tracked). CLAUDE.md is tracked: the
-# template's setup guide. Personal instructions go in CLAUDE.local.md.
+# Personal working documents and agent-specific local configuration (not tracked).
+# AGENTS.md is the canonical, shared instruction file; CLAUDE.md is its compatibility entry point.
 CLAUDE.local.md
-AGENTS.md
 DESIGN.md
 PLAN.md
 .mcp.json
