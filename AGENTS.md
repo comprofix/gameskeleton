@@ -20,7 +20,7 @@ so it must stay **game-agnostic**. The only game content is the small demo
 - Remote: `git@github.com:comprofix/gameskeleton.git`
 - `DESIGN.md` and `PLAN.md` are local working documents, **not tracked in git**.
 
-> During new game setup (§2), The agent replaces this section with the game's own
+> During new game setup (§2), the agent replaces this section with the game's own
 > description and fixed decisions, and removes §11.
 
 For further work on the skeleton, §2 offers to write fresh DESIGN.md and
@@ -166,8 +166,8 @@ tracked; personal instructions go in agent-specific local instructions, which is
   any breaking change makes a major bump, any `feat` a minor bump, otherwise
   any `fix` or `perf` a patch bump. A release is an annotated tag `vX.Y.Z`
   with the message `<Title> vX.Y.Z`.
-- Commits have no `AI co-author trailers` or `agent session trailers` trailers. The
-  user is the only author.
+- Commits have no AI co-author or agent-session trailers. The user is the
+  only author.
 - **CI/CD** is set up only as the user chose at setup (§2), or later when
   they ask, and then only as in §5. Do not add or change other GitHub
   workflows unless the user explicitly asks.
