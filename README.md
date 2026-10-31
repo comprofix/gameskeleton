@@ -76,13 +76,13 @@ Options and saved.
 
 1. On GitHub, press **Use this template** to make `comprofix/<game>`, and clone
    it.
-2. Start Claude Code in the folder. With no `DESIGN.md` or `PLAN.md`, it
-   follows the **New game setup** section of `CLAUDE.md`: it asks about the
-   game, including pixel art, smooth or both, and whether to set up CI/CD, then (once you agree) runs
-   `tools/newgame`, sets the preset, sets up CI/CD if wanted, writes
-   `DESIGN.md` and `PLAN.md`, and updates `CLAUDE.md`. It stops there, before
-   any game code. Anything you want Claude to know that is yours alone goes
-   in `CLAUDE.local.md`.
+2. Start your coding agent in the folder. With no `DESIGN.md` or `PLAN.md`, it
+   follows the **New game setup** section of `AGENTS.md`: it asks about the
+   game, including pixel art, smooth or both, and whether to set up CI/CD, then
+   (once you agree) runs `tools/newgame`, sets the preset, sets up CI/CD if
+   wanted, writes `DESIGN.md` and `PLAN.md`, and updates `AGENTS.md`. It stops
+   there, before any game code. Keep personal instructions in the local,
+   untracked configuration supported by your chosen agent.
 
 ### By hand
 
