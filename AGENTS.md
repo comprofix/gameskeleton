@@ -90,8 +90,8 @@ either is missing:
 
 DESIGN.md and PLAN.md are local and not tracked in git. If either is missing
 at the start of a session, ask the user for their copies before doing
-anything else. Don't write new ones unless the user asks. This file is
-tracked; personal instructions go in agent-specific local instructions, which is not.
+anything else. Don't write new ones unless the user asks. This file is tracked; personal instructions belong in the chosen agent's local,
+untracked configuration.
 ```
 
 ### DESIGN.md outline
