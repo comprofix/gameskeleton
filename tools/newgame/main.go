@@ -84,7 +84,205 @@ func main() {
 
 var validName = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
+
+func preflight(root string, o options) error {
+	switch {
+	case o.module == "" || strings.ContainsAny(o.module, " \t\"") || o.module == oldModule:
+		return fmt.Errorf("-module %q: give the new game's module path", o.module)
+	case !validName.MatchString(o.name) || o.name == oldName:
+		return fmt.Errorf("-name %q: use lower case letters, digits and -, starting with a letter", o.name)
+	case strings.TrimSpace(o.title) == "":
+		return errors.New("-title: give the game's title")
+	case stylePresets[o.style] == "":
+		return fmt.Errorf("-style %q: use pixel, smooth or both", o.style)
+	case o.style != "pixel" && o.keepDemo:
+		return errors.New("-keep-demo: the demo is pixel art, so only a pixel game can keep it")
+	}
+
+	if _, err := os.Stat(filepath.Join(root, "DESIGN.md")); err == nil {
+		return errors.New("DESIGN.md exists here: newgame runs on a fresh copy before DESIGN.md is written (move it aside to go on)")
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	if err := rejectSymlinks(root); err != nil {
+		return err
+	}
+
+	for _, p := range []string{
+		"go.mod", "AGENTS.md", "README.md", "CLAUDE.md",
+		"cmd/gameskeleton/main.go", "internal/config/project.go",
+	} {
+		info, err := os.Lstat(filepath.Join(root, filepath.FromSlash(p)))
+		if err != nil {
+			return fmt.Errorf("preflight: required file %s: %w", p, err)
+		}
+		if !info.Mode().IsRegular() {
+			return fmt.Errorf("preflight: %s is not a regular file", p)
+		}
+	}
+	for _, p := range []string{"tools/newgame", "cmd", "internal/config"} {
+		info, err := os.Lstat(filepath.Join(root, filepath.FromSlash(p)))
+		if err != nil {
+			return fmt.Errorf("preflight: required directory %s: %w", p, err)
+		}
+		if !info.IsDir() {
+			return fmt.Errorf("preflight: %s is not a directory", p)
+		}
+	}
+
+	gomod, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(string(gomod), "module "+oldModule+"\n") {
+		return errors.New("go.mod is not the skeleton's: has this copy already been set up?")
+	}
+	if strings.Contains(o.module, "//") || strings.HasSuffix(o.module, "/") ||
+		strings.Contains(o.module, "/../") || strings.Contains(o.module, "/./") {
+		return fmt.Errorf("-module %q: invalid module path", o.module)
+	}
+
+	agents, err := os.ReadFile(filepath.Join(root, "AGENTS.md"))
+	if err != nil {
+		return err
+	}
+	a := string(agents)
+	start := strings.Index(a, "## 3. Phases and decisions")
+	end := strings.Index(a, "## 11. Rules for the skeleton itself")
+	if start < 0 || end <= start {
+		return errors.New("AGENTS.md: cannot find ordered shared instruction sections 3-10")
+	}
+
+	project, err := os.ReadFile(filepath.Join(root, "internal/config/project.go"))
+	if err != nil {
+		return err
+	}
+	if !titleLine.Match(project) || !presetLine.Match(project) {
+		return errors.New("internal/config/project.go: missing title or project preset declaration")
+	}
+	if o.style == "both" && !secondLine.Match(project) {
+		return errors.New("internal/config/project.go: missing second preset declaration")
+	}
+	if _, err := os.Lstat(filepath.Join(root, "cmd", o.name)); err == nil {
+		return fmt.Errorf("cmd/%s already exists", o.name)
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
+func rejectSymlinks(root string) error {
+	info, err := os.Lstat(root)
+	if err != nil {
+		return err
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("refusing symlinked project root %s", root)
+	}
+	return filepath.WalkDir(root, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		if rel == "." {
+			return nil
+		}
+		if d.IsDir() && d.Name() == ".git" {
+			return filepath.SkipDir
+		}
+		if d.Type()&os.ModeSymlink != 0 {
+			return fmt.Errorf("refusing symlink in project: %s", rel)
+		}
+		return nil
+	})
+}
+
+func copyTree(src, dst string) error {
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if path != src && d.IsDir() && d.Name() == ".git" {
+			return filepath.SkipDir
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		target := dst
+		if rel != "." {
+			target = filepath.Join(dst, rel)
+		}
+		if d.Type()&os.ModeSymlink != 0 {
+			link, err := os.Readlink(path)
+			if err != nil {
+				return err
+			}
+			return os.Symlink(link, target)
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if err := os.MkdirAll(target, info.Mode().Perm()); err != nil {
+				return err
+			}
+			return os.Chmod(target, info.Mode().Perm())
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(target, data, info.Mode().Perm()); err != nil {
+			return err
+		}
+		return os.Chmod(target, info.Mode().Perm())
+	})
+}
+
+func restoreTree(backup, root string) error {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if entry.Name() == ".git" {
+			continue
+		}
+		if err := os.RemoveAll(filepath.Join(root, entry.Name())); err != nil {
+			return err
+		}
+	}
+	return copyTree(backup, root)
+}
+
 func run(o options, log io.Writer) error {
+	root := o.dir
+	if err := preflight(root, o); err != nil {
+		return err
+	}
+	backup, err := os.MkdirTemp("", "newgame-backup-")
+	if err != nil {
+		return fmt.Errorf("create rollback snapshot: %w", err)
+	}
+	defer os.RemoveAll(backup)
+	if err := copyTree(root, backup); err != nil {
+		return fmt.Errorf("snapshot project: %w", err)
+	}
+	if err := runInPlace(o, log); err != nil {
+		if restoreErr := restoreTree(backup, root); restoreErr != nil {
+			return errors.Join(err, fmt.Errorf("restore original project: %w", restoreErr))
+		}
+		return err
+	}
+	return nil
+}
+
+func runInPlace(o options, log io.Writer) error {
 	switch {
 	case o.module == "" || strings.ContainsAny(o.module, " \t\"") || o.module == oldModule:
 		return fmt.Errorf("-module %q: give the new game's module path", o.module)
@@ -107,18 +305,6 @@ func run(o options, log io.Writer) error {
 	}
 	if !strings.HasPrefix(string(gomod), "module "+oldModule+"\n") {
 		return errors.New("go.mod is not the skeleton's: has this copy already been set up?")
-	}
-
-	// Remove first, so nothing is rewritten only to be deleted.
-	remove := []string{"tools/newgame"}
-	if !o.keepDemo {
-		remove = append(remove, demoPaths...)
-	}
-	for _, p := range remove {
-		if err := os.RemoveAll(filepath.Join(root, filepath.FromSlash(p))); err != nil {
-			return err
-		}
-		fmt.Fprintln(log, "removed", p)
 	}
 
 	n, err := rewrite(root, o)
@@ -160,13 +346,37 @@ func run(o options, log io.Writer) error {
 	fmt.Fprintln(log, "wrote README.md")
 
 	if o.check {
-		for _, args := range [][]string{{"build", "./..."}, {"vet", "./..."}, {"test", "./..."}} {
+		for _, args := range [][]string{{"build", "./..."}, {"vet", "./..."}} {
 			fmt.Fprintln(log, "go", strings.Join(args, " "))
 			cmd := exec.Command("go", args...)
 			cmd.Dir, cmd.Stdout, cmd.Stderr = root, log, log
 			if err := cmd.Run(); err != nil {
 				return fmt.Errorf("go %s: %w", args[0], err)
 			}
+		}
+	}
+
+	// Remove the generator before go test: its own integration test runs the
+	// generator and would recursively invoke go test otherwise. The enclosing
+	// snapshot restores these paths if the final test fails.
+	remove := []string{"tools/newgame"}
+	if !o.keepDemo {
+		remove = append(remove, demoPaths...)
+	}
+	for _, p := range remove {
+		if err := os.RemoveAll(filepath.Join(root, filepath.FromSlash(p))); err != nil {
+			return err
+		}
+		fmt.Fprintln(log, "removed", p)
+	}
+
+	if o.check {
+		args := []string{"test", "./..."}
+		fmt.Fprintln(log, "go", strings.Join(args, " "))
+		cmd := exec.Command("go", args...)
+		cmd.Dir, cmd.Stdout, cmd.Stderr = root, log, log
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("go %s: %w", args[0], err)
 		}
 	}
 	fmt.Fprintln(log, "done")
