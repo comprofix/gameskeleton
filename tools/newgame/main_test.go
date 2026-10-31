@@ -76,10 +76,10 @@ func leftovers(t *testing.T, root string) []string {
 
 func TestRewritePreservesModuleContainingSkeletonName(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module "+oldModule+"\\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module "+oldModule+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "import.go"), []byte("package example\\nimport _ \""+oldModule+"/internal/config\"\\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "import.go"), []byte("package example\nimport _ \""+oldModule+"/internal/config\"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	module := "example.com/me/mygameskeleton-game"
@@ -115,10 +115,10 @@ func TestValidModulePath(t *testing.T) {
 		{"example.com/./game", false},
 		{"example.com/../game", false},
 		{"example.com/..", false},
-		{"example.com/game\\nother", false},
-		{"example.com/game\\rother", false},
-		{"example.com/game\\tother", false},
-		{"example.com/game\\\\other", false},
+		{"example.com/game\nother", false},
+		{"example.com/game\rother", false},
+		{"example.com/game\tother", false},
+		{"example.com/game\\other", false},
 		{"example.com/game name", false},
 		{"example.com/game:tag", false},
 		{"localhost/game", false},

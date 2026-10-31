@@ -87,7 +87,7 @@ var validName = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 // validModulePath checks the syntax required for a Go module import path.
 // Module paths are slash-separated import paths with a dotted first element.
 func validModulePath(path string) bool {
-	if path == "" || strings.ContainsAny(path, "\\r\\n\\t\\\\\\\"") {
+	if path == "" || strings.ContainsAny(path, " \t\r\n\\\"") {
 		return false
 	}
 	parts := strings.Split(path, "/")
