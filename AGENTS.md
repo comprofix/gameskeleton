@@ -157,8 +157,8 @@ either is missing:
   with the message `<Title> vX.Y.Z`.
 - Commits have no AI co-author or agent-session trailers. The user is the
   only author.
-- **CI/CD** is set up only as the user chose at setup (§2), or later when
-  they ask, and then only as in §5. Do not add or change other GitHub
+- **CI/CD** is set up only as the user chose during project setup and recorded
+  in DESIGN.md, or later when they ask, and then only as in §5. Do not add or change other GitHub
   workflows unless the user explicitly asks.
 - **Do not track** DESIGN.md, PLAN.md, agent-specific local instructions or `.claude/` in git,
   and do not remove them from `.gitignore`.
@@ -319,7 +319,7 @@ assets/            assets.go, sprites/, gen/, font/
 
 ## 7. Art
 
-The game's art style, chosen at setup (§2), is pixel art, smooth, or both.
+The game's art style, recorded in DESIGN.md, is pixel art, smooth, or both.
 Either way colours come from the palette by name, and the program icon is a
 sprite (below).
 
