@@ -105,6 +105,7 @@ func TestValidModulePath(t *testing.T) {
 		path string
 		want bool
 	}{
+		{"example.com", true},
 		{"example.com/me/game", true},
 		{"github.com/comprofix/mygameskeleton-game", true},
 		{"example.com/game.v2", true},
