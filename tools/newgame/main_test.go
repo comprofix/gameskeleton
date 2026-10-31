@@ -130,6 +130,32 @@ func TestNewGame(t *testing.T) {
 			if !strings.Contains(string(readme), "Created from [gameskeleton](https://github.com/comprofix/gameskeleton) v"+SkeletonVersion) {
 				t.Errorf("README does not say where it came from:\n%s", readme)
 			}
+
+			agents, err := os.ReadFile(filepath.Join(dir, "AGENTS.md"))
+			if err != nil {
+				t.Fatalf("generated AGENTS.md: %v", err)
+			}
+			for _, want := range []string{"# AGENTS.md", "Rocket \\"RR\\" Rumble", "## 2. Working documents", "DESIGN.md", "## 3. Phases and decisions"} {
+				if !strings.Contains(string(agents), want) {
+					t.Errorf("generated AGENTS.md does not contain %q", want)
+				}
+			}
+			for _, unwanted := range []string{"New game setup", "Rules for the skeleton itself", "Dot Dash", oldName} {
+				if strings.Contains(string(agents), unwanted) {
+					t.Errorf("generated AGENTS.md still contains skeleton-only text %q", unwanted)
+				}
+			}
+			claude, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
+			if err != nil || string(claude) != "@AGENTS.md\\n" {
+				t.Errorf("generated CLAUDE.md = %q, err %v; want @AGENTS.md hand-off", claude, err)
+			}
+			ignore, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+			if err != nil {
+				t.Fatalf("generated .gitignore: %v", err)
+			}
+			if strings.Contains(string(ignore), "\\nAGENTS.md\\n") {
+				t.Error("generated .gitignore still ignores AGENTS.md")
+			}
 			if !keep {
 				// A game with no sprites yet can still regenerate its assets.
 				cmd := exec.Command("go", "generate", "./assets")
