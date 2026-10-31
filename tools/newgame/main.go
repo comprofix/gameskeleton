@@ -91,7 +91,7 @@ func validModulePath(path string) bool {
 		return false
 	}
 	parts := strings.Split(path, "/")
-	if len(parts) < 2 || parts[0] == "" || parts[0][0] == '-' || !strings.Contains(parts[0], ".") {
+	if parts[0] == "" || parts[0][0] == '-' || !strings.Contains(parts[0], ".") {
 		return false
 	}
 	// The first element is a domain name, so it has stricter character rules.
