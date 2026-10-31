@@ -4,14 +4,14 @@
 //	go run ./tools/newgame -module github.com/comprofix/<game> -name <game> -title "<Game Title>" [-style pixel|smooth|both] [-keep-demo]
 //
 // It changes the module path in go.mod and every import, and the skeleton's
-// name in code, in CLAUDE.md and in the release templates; renames
+// name in code, in AGENTS.md and in the release templates; renames
 // cmd/gameskeleton to cmd/<game>; sets config.Title; for the smooth art
 // style sets config.Project to the Smooth preset (pixel art keeps Modern,
 // to be changed by hand for another pixel preset); for both looks sets
 // config.Project to Smooth and config.Second to Modern; removes the demo
 // unless -keep-demo is given, and always for smooth or both, as the demo is
 // pixel art;
-// writes a new README saying which skeleton version it
+// writes game-specific AGENTS.md guidance and a new README saying which skeleton version it
 // came from; removes itself; and runs go build, go vet and go test to check
 // everything still works.
 //
@@ -126,6 +126,11 @@ func run(o options, log io.Writer) error {
 		return err
 	}
 	fmt.Fprintf(log, "renamed the module and %s in %d files\n", oldName, n)
+
+	if err := writeGameInstructions(root, o); err != nil {
+		return err
+	}
+	fmt.Fprintln(log, "wrote game-specific AGENTS.md")
 
 	if err := os.Rename(filepath.Join(root, "cmd", oldName), filepath.Join(root, "cmd", o.name)); err != nil {
 		return err
@@ -248,6 +253,43 @@ func setSecond(path, preset string) error {
 }
 
 // readme is the new game's starting README.
+// writeGameInstructions turns the skeleton's setup and maintenance guidance
+// into the shared instructions for a game created from it. The common
+// development rules (sections 3-10) stay sourced from the skeleton AGENTS.md.
+func writeGameInstructions(root string, o options) error {
+	path := filepath.Join(root, "AGENTS.md")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	source := string(data)
+	start := strings.Index(source, "## 3. Phases and decisions")
+	end := strings.Index(source, "## 11. Rules for the skeleton itself")
+	if start < 0 || end < 0 || end <= start {
+		return fmt.Errorf("%s: cannot find shared instruction sections 3-10", path)
+	}
+	project := fmt.Sprintf(`## 1. Project
+
+**%s**: <one-line description of the game and its fixed decisions>.
+
+Replace this section with the game's description and fixed decisions once
+DESIGN.md and PLAN.md have been prepared.
+
+## 2. Working documents
+
+DESIGN.md and PLAN.md are personal working documents and are not tracked in
+git. If either is missing at the start of a session, ask the user for their
+copies before doing anything else. Do not create them unless asked. This
+AGENTS.md is tracked and contains shared project guidance; CLAUDE.md is a
+compatibility hand-off to it. Keep personal instructions in the local,
+untracked configuration supported by the chosen coding agent.
+
+`, o.title)
+	out := "# AGENTS.md\n\nShared, agent-neutral instructions for this game. This file is tracked in git. Agent-specific entry points should hand off to this file; personal instructions belong in the chosen agent's local, untracked configuration.\n\n" + project + source[start:end]
+	return os.WriteFile(path, []byte(out), 0o644)
+}
+
+// readme is the new game's starting README.
 func readme(o options) string {
 	return fmt.Sprintf(`# %s
 
@@ -273,10 +315,7 @@ go build -o bin/ ./cmd/%[3]s
 ## Personal documents
 
 `+"`DESIGN.md` and `PLAN.md`"+` are personal working documents. `+"`.gitignore`"+` keeps
-them out of git, so back them up somewhere else. `+"`CLAUDE.md`"+` is tracked, so
-anyone working on the game with Claude Code gets the same guidance; put
-personal instructions in `+"`CLAUDE.local.md`"+`, which Claude Code also reads and
-`+"`.gitignore`"+` keeps out of git.
+them out of git, so back them up somewhere else. `+"`AGENTS.md`"+` is tracked and contains the shared project guidance. `+"`CLAUDE.md`"+` is a compatibility hand-off for Claude Code. Keep personal instructions in the local, untracked configuration supported by your coding agent.
 
 ## License
 
