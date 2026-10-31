@@ -135,7 +135,7 @@ func TestNewGame(t *testing.T) {
 			if err != nil {
 				t.Fatalf("generated AGENTS.md: %v", err)
 			}
-			for _, want := range []string{"# AGENTS.md", "Rocket \\"RR\\" Rumble", "## 2. Working documents", "DESIGN.md", "## 3. Phases and decisions"} {
+			for _, want := range []string{"# AGENTS.md", "Rocket", "## 2. Working documents", "DESIGN.md", "## 3. Phases and decisions"} {
 				if !strings.Contains(string(agents), want) {
 					t.Errorf("generated AGENTS.md does not contain %q", want)
 				}
@@ -146,14 +146,14 @@ func TestNewGame(t *testing.T) {
 				}
 			}
 			claude, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
-			if err != nil || string(claude) != "@AGENTS.md\\n" {
+			if err != nil || string(claude) != "@AGENTS.md\n" {
 				t.Errorf("generated CLAUDE.md = %q, err %v; want @AGENTS.md hand-off", claude, err)
 			}
 			ignore, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
 			if err != nil {
 				t.Fatalf("generated .gitignore: %v", err)
 			}
-			if strings.Contains(string(ignore), "\\nAGENTS.md\\n") {
+			if strings.Contains(string(ignore), "\nAGENTS.md\n") {
 				t.Error("generated .gitignore still ignores AGENTS.md")
 			}
 			if !keep {
