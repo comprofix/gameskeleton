@@ -20,8 +20,8 @@ so it must stay **game-agnostic**. The only game content is the small demo
 - Remote: `git@github.com:comprofix/gameskeleton.git`
 - `DESIGN.md` and `PLAN.md` are local working documents, **not tracked in git**.
 
-> During new game setup (§2), the agent replaces this section with the game's own
-> description and fixed decisions, and removes §11.
+> During new game setup (§2), `tools/newgame` generates a game-specific
+> `AGENTS.md`, replaces this section with a project placeholder, and removes §11.
 
 For further work on the skeleton, §2 offers to write fresh DESIGN.md and
 PLAN.md for that work.
@@ -69,7 +69,7 @@ either is missing:
       `-keep-demo` only if asked (pixel art only). It renames the module, the
       command folder and the commands in §5, sets the title and the preset
       for the style (`Modern`, `Smooth`, or `Smooth` with `Modern` second),
-      writes a new README and removes itself.
+      writes a game-specific `AGENTS.md` and a new README, then removes itself.
    2. For pixel art with another preset, set it in
       `internal/config/project.go`: `Classic`, or a custom `Preset` added to
       `internal/config/preset.go`.
@@ -77,8 +77,9 @@ either is missing:
    4. Write `DESIGN.md` and `PLAN.md` using the outlines below. Mark anything
       not yet decided as **(open)** in the decisions table, and record the
       CI/CD answer there either way.
-   5. Change §1 of this file to describe the game, including its fixed
-      decisions. Replace this §2 with the short section below. Remove §11.
+   5. Change §1 of the generated `AGENTS.md` to describe the game, including
+      its fixed decisions. The generator has already replaced §2 with the
+      working-documents guidance and removed §11.
    6. Run `go vet ./...` and `go test ./...`.
 4. **Hand back:** show the documents, list the open decisions, and stop. Do not
    write game code or commit until the user says so.
