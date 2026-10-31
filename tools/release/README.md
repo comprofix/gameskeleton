@@ -1,6 +1,6 @@
 # Release templates
 
-The files a game copies in when it sets up CI/CD (CLAUDE.md §5). They are kept
+The files a game copies in when it sets up CI/CD (AGENTS.md §5). They are kept
 here, not in `.github/workflows/`, so the skeleton's own tags build nothing.
 
 - `release.yml` goes to `.github/workflows/`. When a `v*` tag is pushed it
