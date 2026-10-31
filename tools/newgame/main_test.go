@@ -171,22 +171,34 @@ func TestNewGame(t *testing.T) {
 	}
 }
 
-
 func TestRejectsSymlinkWithoutTouchingTarget(t *testing.T) {
 	dir := t.TempDir()
 	copySkeleton(t, dir)
 	external := filepath.Join(t.TempDir(), "outside.md")
-	if err := os.WriteFile(external, []byte("external data"), 0o644); err != nil { t.Fatal(err) }
+	if err := os.WriteFile(external, []byte("external data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	readme := filepath.Join(dir, "README.md")
-	if err := os.Remove(readme); err != nil { t.Fatal(err) }
-	if err := os.Symlink(external, readme); err != nil { t.Skipf("symlinks unavailable: %v", err) }
+	if err := os.Remove(readme); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(external, readme); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
 	o := options{dir: dir, module: "example.com/me/game", name: "game", title: "Game", style: "pixel", check: false}
 	if err := run(o, &bytes.Buffer{}); err == nil || !strings.Contains(err.Error(), "symlink") {
 		t.Fatalf("run error = %v, want symlink refusal", err)
 	}
-	got, err := os.ReadFile(external); if err != nil { t.Fatal(err) }
-	if string(got) != "external data" { t.Fatalf("external target changed: %q", got) }
-	if !exists(dir, "tools/newgame/main.go") { t.Fatal("generator was removed after preflight refusal") }
+	got, err := os.ReadFile(external)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "external data" {
+		t.Fatalf("external target changed: %q", got)
+	}
+	if !exists(dir, "tools/newgame/main.go") {
+		t.Fatal("generator was removed after preflight refusal")
+	}
 }
 
 func TestRestoresProjectWhenValidationFails(t *testing.T) {
@@ -194,7 +206,9 @@ func TestRestoresProjectWhenValidationFails(t *testing.T) {
 	copySkeleton(t, dir)
 	fakeBin := t.TempDir()
 	fakeGo := filepath.Join(fakeBin, "go")
-	if err := os.WriteFile(fakeGo, []byte("#!/bin/sh\nexit 17\n"), 0o755); err != nil { t.Fatal(err) }
+	if err := os.WriteFile(fakeGo, []byte("#!/bin/sh\nexit 17\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	t.Setenv("PATH", fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	o := options{dir: dir, module: "example.com/me/game", name: "game", title: "Game", style: "pixel", check: true}
 	if err := run(o, &bytes.Buffer{}); err == nil || !strings.Contains(err.Error(), "go build") {
@@ -203,9 +217,16 @@ func TestRestoresProjectWhenValidationFails(t *testing.T) {
 	if !exists(dir, "tools/newgame/main.go") || !exists(dir, "cmd/gameskeleton/main.go") {
 		t.Fatal("failed transformation did not restore generator and original command")
 	}
-	if exists(dir, "cmd/game") { t.Fatal("failed transformation left renamed command") }
-	gomod, err := os.ReadFile(filepath.Join(dir, "go.mod")); if err != nil { t.Fatal(err) }
-	if !strings.HasPrefix(string(gomod), "module "+oldModule+"\n") { t.Fatal("failed transformation did not restore go.mod") }
+	if exists(dir, "cmd/game") {
+		t.Fatal("failed transformation left renamed command")
+	}
+	gomod, err := os.ReadFile(filepath.Join(dir, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(gomod), "module "+oldModule+"\n") {
+		t.Fatal("failed transformation did not restore go.mod")
+	}
 }
 
 func TestRefuses(t *testing.T) {
